@@ -1,0 +1,4 @@
+* Thu Dec 8 2016 Nick Miller <nick.miller@onyxpoint.com> - 0.0.1
+- Most of this content was from simplib
+  - The dns autoconfiguation content was moved to a profile in simp/simp
+- First cut

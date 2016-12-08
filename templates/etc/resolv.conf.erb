@@ -1,0 +1,52 @@
+<%
+  t_content = Array.new
+
+  if @servers.first == '127.0.0.1' or @servers.first == '::1' then
+    t_content << "nameserver #{@servers.first}"
+  else
+    @servers.each do |nserver|
+      t_content << "nameserver #{nserver}"
+    end
+  end
+
+  if not @resolv_domain.empty? then
+    t_content << "domain #{@resolv_domain}"
+  end
+
+  if not @search.nil? then
+    t_content << "search #{@search.join(' ')}"
+  end
+
+  if not @sortlist.nil? then
+    t_content << "sortlist #{@sortlist.join(' ')}"
+  end
+
+  t_options = Array.new
+
+  if @debug then
+    t_options << "debug"
+  end
+
+  t_options << "ndots:#{@ndots}"
+  t_options << "timeout:#{@timeout}"
+  t_options << "attempts:#{@attempts}"
+
+  if @rotate then
+    t_options << "rotate"
+  end
+
+  if @no_check_names then
+    t_options << 'no-check-names'
+  end
+
+  if @inet6 then
+    t_options << 'inet6'
+  end
+
+  if not @extra_options.nil? then
+    t_options += @extra_options
+  end
+
+  t_content << "options #{t_options.join(' ')}"
+-%>
+<%= t_content.join("\n") %>
