@@ -2,10 +2,10 @@
 # See host.conf(5) for descriptions of the variables.
 #
 class resolv::host_conf (
-  Optional[Array[Pattern[/^\./]]] $trim = undef,
-  Boolean $multi                        = true,
-  Enum['off','nowarn','warn'] $spoof    = 'warn',
-  Boolean $reorder                      = true
+  Optional[Array[Pattern[/^\./]]] $trim    = undef,
+  Boolean                         $multi   = true,
+  Enum['off','nowarn','warn']     $spoof   = 'warn',
+  Boolean                         $reorder = true
 ) {
 
   file { '/etc/host.conf':
