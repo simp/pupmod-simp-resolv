@@ -32,8 +32,8 @@
 #   to false.
 #
 class resolv (
-  Array           $servers        = simplib::lookup('::simp_options::dns::servers', { 'default_value' => ['127.0.0.1'], 'value_type'      => Array[String] }),
-  Array           $search         = simplib::lookup('::simp_options::dns::search', { 'default_value'  => [$facts['domain']], 'value_type' => Array[String] }),
+  Array           $servers        = simplib::lookup('simp_options::dns::servers', { 'default_value' => ['127.0.0.1'], 'value_type'      => Array[String] }),
+  Array           $search         = simplib::lookup('simp_options::dns::search', { 'default_value'  => [$facts['domain']], 'value_type' => Array[String] }),
   Optional[Array] $sortlist       = undef,
   Optional[Array] $extra_options  = undef,
   String          $resolv_domain  = $facts['domain'],
