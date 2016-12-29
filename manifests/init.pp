@@ -32,23 +32,22 @@
 #   to false.
 #
 class resolv (
-  Array           $servers        = simplib::lookup('simp_options::dns::servers', { 'default_value' => ['127.0.0.1'], 'value_type'      => Array[String] }),
-  Array           $search         = simplib::lookup('simp_options::dns::search', { 'default_value'  => [$facts['domain']], 'value_type' => Array[String] }),
-  Optional[Array] $sortlist       = undef,
-  Optional[Array] $extra_options  = undef,
-  String          $resolv_domain  = $facts['domain'],
-  Boolean         $debug          = false,
-  Boolean         $rotate         = true,
-  Boolean         $no_check_names = false,
-  Boolean         $inet6          = false,
-  Integer         $ndots          = 1,
-  Integer         $timeout        = 2,
-  Integer         $attempts       = 2,
-  Boolean         $named_server   = false,
-  Boolean         $named_autoconf = true,
-  Boolean         $caching        = true
+  Simplib::Netlist           $servers        = simplib::lookup('simp_options::dns::servers', { 'default_value' => ['127.0.0.1'] }),
+  Simplib::Netlist           $search         = simplib::lookup('simp_options::dns::search', { 'default_value'  => [$facts['domain']] }),
+  Optional[Simplib::Netlist] $sortlist       = undef,
+  Optional[Array]            $extra_options  = undef,
+  String                     $resolv_domain  = $facts['domain'],
+  Boolean                    $debug          = false,
+  Boolean                    $rotate         = true,
+  Boolean                    $no_check_names = false,
+  Boolean                    $inet6          = false,
+  Integer                    $ndots          = 1,
+  Integer                    $timeout        = 2,
+  Integer                    $attempts       = 2,
+  Boolean                    $named_server   = false,
+  Boolean                    $named_autoconf = true,
+  Boolean                    $caching        = true
 ) {
-  if $sortlist { validate_net_list($sortlist) }
 
   file { '/etc/resolv.conf':
     owner   => 'root',

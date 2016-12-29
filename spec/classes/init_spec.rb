@@ -59,7 +59,7 @@ describe 'resolv' do
 
           it { is_expected.to compile.with_all_deps }
           it { is_expected.not_to contain_class('named::caching') }
-          # it { is_expected.to contain_class('named') }
+          it { is_expected.to contain_class('named') }
         end
 
         context 'node_is_nameserver_with_selinux' do
