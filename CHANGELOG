@@ -1,3 +1,6 @@
+* Thu Jul 06 2017 Liz Nemsick <lnemsick.simp@gmail.com> - 0.0.2-0
+- Update puppet dependency and remove OBE pe dependency in metadata.json
+
 * Thu Dec 8 2016 Nick Miller <nick.miller@onyxpoint.com> - 0.0.1
 - Most of this content was from simplib
   - The dns autoconfiguation content was moved to a profile in simp/simp
