@@ -1,3 +1,8 @@
+* Tue Dec 12 2017 Chris Tessmer <chris.tessmer@onyxpoint.com> - 0.1.0-0
+- Improve validation for resolv.conf parameters
+- Add type aliases, epp with typed parameters
+- Update data types in init.pp parameter list (backwards compatible)
+
 * Thu Jul 06 2017 Liz Nemsick <lnemsick.simp@gmail.com> - 0.0.2-0
 - Update puppet dependency and remove OBE pe dependency in metadata.json
 
