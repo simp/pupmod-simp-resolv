@@ -47,8 +47,8 @@
 #   Optional Array to put any options that may not be covered by the variables
 #   below. These will be appended to the options string.
 class resolv (
-  Simplib::Netlist           $servers        = simplib::lookup('simp_options::dns::servers', { 'default_value' => ['127.0.0.1'] }),
-  Simplib::Netlist           $search         = simplib::lookup('simp_options::dns::search', { 'default_value'  => [$facts['domain']] }),
+  Array[Simplib::IP,0,3]     $servers        = simplib::lookup('simp_options::dns::servers', { 'default_value' => ['127.0.0.1'] }),
+  Array[Simplib::Domain,0,6] $search         = simplib::lookup('simp_options::dns::search', { 'default_value'  => [$facts['domain']] }),
   Resolv::Domain             $resolv_domain  = $facts['domain'],
   Boolean                    $debug          = false,
   Boolean                    $rotate         = true,

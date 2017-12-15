@@ -2,6 +2,11 @@
 - Improve validation for resolv.conf parameters
 - Add type aliases, epp with typed parameters
 - Update data types in init.pp parameter list (backwards compatible)
+  - NOTE: The data type for the parameters `$resolv::servers` and
+    `$resolv::search` has changed from `Simplib::Netlist` to Arrays with more
+    specific requirements.  This has not been considered a breaking API change,
+    since the original data types were too permissive and non-valid data would
+    have either been ignored or broken name resolution.
 
 * Thu Jul 06 2017 Liz Nemsick <lnemsick.simp@gmail.com> - 0.0.2-0
 - Update puppet dependency and remove OBE pe dependency in metadata.json
