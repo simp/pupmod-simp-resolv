@@ -1,19 +1,21 @@
 {
   "name": "simp-resolv",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "author": "SIMP Team",
-  "summary": "A SIMP Puppet module for managing client-side dns settings",
+  "summary": "A SIMP Puppet module for managing client-side DNS settings",
   "license": "Apache-2.0",
   "source": "https://github.com/simp/pupmod-simp-resolv",
   "project_page": "https://github.com/simp/pupmod-simp-resolv",
   "issues_url": "https://simp-project.atlassian.net",
   "tags": [
-    "simp"
+    "simp",
+    "dns",
+    "resolv.conf"
   ],
   "dependencies": [
     {
       "name": "simp/simplib",
-      "version_requirement": ">= 3.1.0 < 4.0.0"
+      "version_requirement": ">= 3.9.0 < 4.0.0"
     },
     {
       "name": "simp/named",

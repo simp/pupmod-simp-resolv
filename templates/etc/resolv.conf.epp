@@ -1,0 +1,53 @@
+<%- |
+Array[Simplib::IP,0,3]     $nameservers    = [],
+Array[Simplib::Domain,0,6] $search         = [],
+Resolv::Sortlist           $sortlist       = [],
+Boolean                    $debug          = false,
+Integer[0,15]              $ndots          = 1,
+Integer[0,30]              $timeout        = 2,
+Integer[0,5]               $attempts       = 2,
+Boolean                    $rotate         = true,
+Boolean                    $no_check_names = false,
+Boolean                    $inet6          = false,
+Array[String]              $extra_options  = [],
+Optional[Resolv::Domain]   $domain,
+|
+
+if !$nameservers.empty {
+  if $nameservers[0] == '127.0.0.1' or $nameservers[0] == '::1' {
+    $_nameservers = [ $nameservers[0] ]
+  } else {
+    $_nameservers = $nameservers
+  }
+} else {
+  $_nameservers = []
+}
+
+$_options = [
+  $debug ? { true => 'debug', false => undef },
+  "ndots:${ndots}",
+  "timeout:${timeout}",
+  "attempts:${attempts}",
+  $rotate ? { true => 'rotate', false => undef },
+  $no_check_names ? { true => 'no-check-names', false => undef },
+  $inet6 ? { true => 'inet6', false => undef },
+  $extra_options.empty ? { true => undef, false => $extra_options.join(' ') },
+].delete_undef_values.join(' ')
+
+-%>
+# This file is managed by Puppet (module 'resolv')
+<%= (!$nameservers.empty) ? {
+  true  => $nameservers.map |$ns| { "nameserver ${ns}" }.join("\n"),
+  false => '# NOTE: No nameservers specified',
+} %>
+<%= (defined('$domain') and !$domain.empty) ? {
+  true  => "domain ${domain}",
+  false => '# NOTE: No domain specified',
+} %>
+<%- if !$search.empty { -%>
+search <%= $search.join(' ') %>
+<%- } -%>
+<%- if !$sortlist.empty { -%>
+sortlist <%= $sortlist.join(' ') %>
+<%- } -%>
+options <%= $_options %>

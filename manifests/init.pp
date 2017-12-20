@@ -6,18 +6,28 @@
 #   An array of servers to query. If the first server is '127.0.0.1' or '::1'
 #   then the host will be set up as a caching DNS server unless $caching is
 #   set to false.  The other hosts will be used as the higher level
-#   nameservers.
+#   nameservers
 # @param search
 #   Array of entries that will be searched, in order, for hosts.
-# @param sortlist
-#   Array of address/netmask pairs that allow addresses returned by
-#   gethostbyname to be sorted.
-# @param extra_options
-#   A place to put any options that may not be covered by the
-#   variables below. These will be appended to the options string.
 # @param resolv_domain
 #   Local domain name, defaults to the domain of your host.
-#
+# @param debug
+#   Print debugging messages
+# @param rotate
+#   When `true`, enables round-robin selection of $servers to distribute the
+#   query load.
+# @param no_check_names
+#   When `true`, disables the modern BIND checking of incoming hostnames and
+#   mail names for invalid characters such as underscore (`_`), non-ASCII, or
+#   control characters.
+# @param inet6
+#   When `true`, use AAAA (IPv6) queries and convert A (IPv4) results
+# @param ndots
+#   Value for the `ndots:` option in resolv.conf
+# @param timeout
+#   Amount of time (in seconds) the resolver will wait for a response
+# @param attempts
+#   Number of times to attempt querying $servers before giving up
 # @param named_server
 #   A boolean that states that this server is definitively a named server.
 #   Bypasses the need for $named_autoconf below.
@@ -30,31 +40,52 @@
 #   *If* the $servers array above starts with '127.0.0.1' or '::1', then
 #   the system will set itself up as a caching nameserver unless this is set
 #   to false.
-#
+# @param sortlist
+#   Optional Array of address/netmask pairs that allow addresses returned by
+#   gethostbyname to be sorted.
+# @param extra_options
+#   Optional Array to put any options that may not be covered by the variables
+#   below. These will be appended to the options string.
 class resolv (
-  Simplib::Netlist           $servers        = simplib::lookup('simp_options::dns::servers', { 'default_value' => ['127.0.0.1'] }),
-  Simplib::Netlist           $search         = simplib::lookup('simp_options::dns::search', { 'default_value'  => [$facts['domain']] }),
-  Optional[Simplib::Netlist] $sortlist       = undef,
-  Optional[Array]            $extra_options  = undef,
-  String                     $resolv_domain  = $facts['domain'],
+  Array[Simplib::IP,0,3]     $servers        = simplib::lookup('simp_options::dns::servers', { 'default_value' => ['127.0.0.1'] }),
+  Array[Simplib::Domain,0,6] $search         = simplib::lookup('simp_options::dns::search', { 'default_value'  => [$facts['domain']] }),
+  Resolv::Domain             $resolv_domain  = $facts['domain'],
   Boolean                    $debug          = false,
   Boolean                    $rotate         = true,
   Boolean                    $no_check_names = false,
   Boolean                    $inet6          = false,
-  Integer                    $ndots          = 1,
-  Integer                    $timeout        = 2,
-  Integer                    $attempts       = 2,
+  Integer[0,15]              $ndots          = 1,
+  Integer[0,30]              $timeout        = 2,
+  Integer[0,5]               $attempts       = 2,
   Boolean                    $named_server   = false,
   Boolean                    $named_autoconf = true,
-  Boolean                    $caching        = true
+  Boolean                    $caching        = true,
+  Optional[Resolv::Sortlist] $sortlist       = undef,
+  Optional[Array[String]]    $extra_options  = undef,
 ) {
+
+  $_resolv_conf_content = epp('resolv/etc/resolv.conf.epp', {
+    'nameservers'    => $servers,
+    'domain'         => $resolv_domain,
+    'search'         => $search,
+    'sortlist'       => $sortlist,
+    'debug'          => $debug,
+    'ndots'          => $ndots,
+    'timeout'        => $timeout,
+    'attempts'       => $attempts,
+    'rotate'         => $rotate,
+    'no_check_names' => $no_check_names,
+    'inet6'          => $inet6,
+    'extra_options'  => $extra_options,
+  })
 
   file { '/etc/resolv.conf':
     owner   => 'root',
     group   => 'root',
     mode    => '0644',
-    content => template('resolv/etc/resolv.conf.erb')
+    content => $_resolv_conf_content,
   }
+
 
   # If this client is one of these passed IP's, then make it a real DNS server
   if $named_server or (defined('named') and defined(Class['named'])) or ($named_autoconf and host_is_me($servers)) {
@@ -90,8 +121,7 @@ class resolv (
     path       => '/etc/sysconfig/network',
     line       => 'PEERDNS=no',
     match      => '^\s*PEERDNS=',
-    deconflict => true
-  }
+    deconflict => true  }
 
   if defined_with_params(Class['named'], {'chroot' => false}) {
       $bind_pkg = 'bind'
