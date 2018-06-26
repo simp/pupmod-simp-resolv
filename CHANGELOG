@@ -1,3 +1,8 @@
+* Tue Jun 26 2018 Nick Miller <nick.miller@onyxpoint.com> - 0.1.1-0
+- Update CI assets
+- Support Puppet 5
+- Support OEL
+
 * Tue Dec 12 2017 Chris Tessmer <chris.tessmer@onyxpoint.com> - 0.1.0-0
 - Improve validation for resolv.conf parameters
 - Add type aliases, epp with typed parameters
