@@ -1,7 +1,6 @@
 ---
 fixtures:
   repositories:
-    iptables: "https://github.com/simp/pupmod-simp-iptables.git"
     named: "https://github.com/simp/pupmod-simp-named.git"
     rsync: "https://github.com/simp/pupmod-simp-rsync.git"
     stdlib: "https://github.com/simp/puppetlabs-stdlib.git"
