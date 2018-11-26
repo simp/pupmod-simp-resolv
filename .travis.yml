@@ -24,7 +24,7 @@ stages:
   - check
   - spec
   - name: deploy
-    if: 'fork = false AND tag = true'
+    if: 'tag IS present'
 
 bundler_args: --without development system_tests --path .vendor
 
@@ -97,7 +97,7 @@ jobs:
         - bundle exec rake spec
 
     - stage: deploy
-      rvm: 2.4.1
+      rvm: 2.4.4
       script:
         - true
       before_deploy:
@@ -118,5 +118,4 @@ jobs:
             secure: "aA9vIVHiylGa8M1tHYQRqqYQDKEINY/tE0n1yh1OZ41DqlC19Ud+gZaUgZVjGtQoTVd1+R8mRtKMzJmxBt1+aMz2KiGr0WKx56PblXSFs9BCwBKfCkwca+qybuD7VQIy4ka/Qdrzard8lK93qgzDTWWi/JHFUN8oH5biSJGAqzlBOXFwyRv1l4ULoYqEy7wfCFGM6YNKdya8717BMucIPTd7CnwlygdrqMFVvIBh3OOSxo4bGFL2glI/FvXSmzoJ2Qd8b2mjBjU0lr3d1A0suLUHPdhkjx99JYAAGkEbTK9EGBi7BhlPR0JS8EAOmOo8r/4DGPDVXHSwccXPn4xyBtk0jRxcKJoPRSw0bGlmL4RxRORhWBMlrWeTWRf0biaRclPPAwHZjDHsRppBWFo3rpqCAGn4s0EfZEsf7ZIVrxGkY0ckZNH65n7c8EUFA8P/L1S+vCAFb+mJJ+6VExVlP+2YyotSfyLUW/RzQRPHwQNIXWpgb/IiODNWrmAUzknYHSAAZ1deDKFgyS/Lgrqy9tpcWX1Jzg1Wxj2m3WbFN2kgpeld8/2CEBIJJfWetRQnD2ODzR8nUtdPi81kT0nmBBZJ11HhtjYvVQDRBqLvUuR5l7r6Jz22Ij6GHiTB5XsId0LDg6NceCLDmVjFSgMbegYsbFxvuSu6SROsK3iRHVE="
           on:
             tags: true
-            rvm: 2.4.1
             condition: '($SKIP_FORGE_PUBLISH != true)'
