@@ -12,7 +12,6 @@ describe 'resolv::host_conf' do
           it { is_expected.to compile.with_all_deps }
           it { is_expected.to create_file('/etc/host.conf').with_content(<<-EOM.gsub(/^\s+/,''))
             multi on
-            spoof warn
             reorder on
             EOM
           }
@@ -22,7 +21,6 @@ describe 'resolv::host_conf' do
           let(:params){{ :trim => ['.bar.baz','.alpha.beta'] }}
           it { is_expected.to create_file('/etc/host.conf').with_content(<<-EOM.gsub(/^\s+/,''))
              multi on
-             spoof warn
              reorder on
              trim .bar.baz,.alpha.beta
              EOM
@@ -36,6 +34,11 @@ describe 'resolv::host_conf' do
               is_expected.to compile.with_all_deps
             }.to raise_error(/expects a match for Pattern/)
           }
+        end
+
+        context 'with spoof' do
+          let(:params){{ :spoof => 'warn' }}
+          it { is_expected.to compile.with_all_deps }
         end
       end
     end
