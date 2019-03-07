@@ -1,6 +1,5 @@
 multi <%= @multi ? 'on' : 'off' %>
-spoof <%= @spoof %>
 reorder <%= @reorder ? 'on' : 'off' %>
-<% if ! @trim.nil? then -%>
+<% if @trim -%>
 trim <%= @trim.join(',') %>
 <% end -%>

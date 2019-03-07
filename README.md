@@ -1,4 +1,8 @@
-[![License](http://img.shields.io/:license-apache-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.html) [![Build Status](https://travis-ci.org/simp/pupmod-simp-resolv.svg)](https://travis-ci.org/simp/pupmod-simp-resolv) [![SIMP compatibility](https://img.shields.io/badge/SIMP%20compatibility-6.*-orange.svg)](https://img.shields.io/badge/SIMP%20compatibility-6.*-orange.svg)
+![License](https://img.shields.io/:license-apache-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
+[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/73/badge)](https://bestpractices.coreinfrastructure.org/projects/73)
+[![Puppet Forge](https://img.shields.io/puppetforge/v/simp/resolv.svg)](https://forge.puppetlabs.com/simp/resolv)
+[![Puppet Forge Downloads](https://img.shields.io/puppetforge/dt/simp/resolv.svg)](https://forge.puppetlabs.com/simp/resolv)
+[![Build Status](https://travis-ci.org/simp/pupmod-simp-resolv.svg)](https://travis-ci.org/simp/pupmod-simp-resolv)
 
 #### Table of Contents
 
@@ -21,7 +25,8 @@ This module sets up DNS client config, including `/etc/resolv.conf` and `/etc/ho
 
 ### This is a SIMP module
 
-This module is a component of the [System Integrity Management Platform](https://github.com/NationalSecurityAgency/SIMP), a compliance-management framework built on Puppet.
+This module is a component of the [System Integrity Management Platform](https://simp-project.com),
+a compliance-management framework built on Puppet.
 
 If you find any issues, they may be submitted to our [bug tracker](https://simp-project.atlassian.net/).
 
@@ -74,4 +79,4 @@ SIMP Puppet modules are generally intended for use on Red Hat Enterprise Linux a
 
 ## Development
 
-Please read our [Contribution Guide] (http://simp-doc.readthedocs.io/en/stable/contributors_guide/index.html).
+Please read our [Contribution Guide] (https://simp.readthedocs.io/en/stable/contributors_guide/index.html).

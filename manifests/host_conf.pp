@@ -1,10 +1,17 @@
 # This class configures /etc/host.conf.
 # See host.conf(5) for descriptions of the variables.
 #
+# @param trim
+# @param multi
+# @param spoof
+#   defunct, see: https://bugzilla.redhat.com/show_bug.cgi?id=1577265)
+#
+#   Remains to prevent issues with direct ``class`` calls.
+# @param reorder
 class resolv::host_conf (
   Optional[Array[Pattern[/^\./]]] $trim    = undef,
   Boolean                         $multi   = true,
-  Enum['off','nowarn','warn']     $spoof   = 'warn',
+  Optional[String]                $spoof   = undef,
   Boolean                         $reorder = true
 ) {
 
@@ -13,5 +20,12 @@ class resolv::host_conf (
     group   => 'root',
     mode    => '0644',
     content => template('resolv/etc/host.conf.erb')
+  }
+
+  if $spoof {
+    simplib::deprecation(
+      'resolv::host_conf::spoof',
+      'resolv::host_conf::spoof has been deprecated since it has no effect on the system'
+    )
   }
 }
