@@ -88,7 +88,7 @@ class resolv (
 
 
   # If this client is one of these passed IP's, then make it a real DNS server
-  if $named_server or (defined('named') and defined(Class['named'])) or ($named_autoconf and host_is_me($servers)) {
+  if $named_server or (defined('named') and defined(Class['named'])) or ($named_autoconf and simplib::host_is_me($servers)) {
     $l_is_named_server = true
   }
   else {
