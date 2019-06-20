@@ -7,7 +7,8 @@ checks:
       value: warn
     type: puppet-class-parameter
     controls:
-      nist_800_53_rev4:SC-20: true
+      nist_800_53:rev4: true
+      nist_800_53:rev4:SC-20: true
     identifiers:
-      nist_800_53_rev4:
+      nist_800_53:rev4:
       - SC-20
