@@ -19,6 +19,7 @@ describe 'compliance_markup', type: :class do
   expected_classes = [
     'resolv',
     'resolv::host_conf',
+    'simp_options'
   ]
 
   allowed_failures = {
