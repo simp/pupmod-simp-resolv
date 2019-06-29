@@ -1,13 +1,15 @@
 ---
 fixtures:
   repositories:
-    named: "https://github.com/simp/pupmod-simp-named.git"
-    rsync: "https://github.com/simp/pupmod-simp-rsync.git"
+    compliance_markup: https://github.com/simp/pupmod-simp-compliance_markup
+    named: https://github.com/simp/pupmod-simp-named.git
+    rsync: https://github.com/simp/pupmod-simp-rsync.git
     selinux_core:
       repo: "https://github.com/simp/pupmod-puppetlabs-selinux_core"
       puppet_version: ">= 6.0.0"
-    stdlib: "https://github.com/simp/puppetlabs-stdlib.git"
-    simplib: "https://github.com/simp/pupmod-simp-simplib.git"
-    concat: "https://github.com/simp/puppetlabs-concat.git"
+    stdlib: https://github.com/simp/puppetlabs-stdlib.git
+    simp_options: https://github.com/simp/pupmod-simp-simp_options
+    simplib: https://github.com/simp/pupmod-simp-simplib.git
+    concat: https://github.com/simp/puppetlabs-concat.git
   symlinks:
     resolv: "#{source_dir}"
