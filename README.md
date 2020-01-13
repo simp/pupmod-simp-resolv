@@ -69,8 +69,7 @@ resolv::host_conf::multi: true
 
 ## Reference
 
-Please refer to the inline documentation within each source file, or to the module's generated YARD documentation for reference material.
-
+Please refer to the [REFERENCE.md](./REFERENCE.md).
 
 ## Limitations
 
