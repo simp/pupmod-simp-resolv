@@ -40,6 +40,12 @@
 #   *If* the $servers array above starts with '127.0.0.1' or '::1', then
 #   the system will set itself up as a caching nameserver unless this is set
 #   to false.
+# @param manage_via_nmcli
+#   Allows the user to update DNS entries via nmcli instead of directly
+#   modifying resolv.conf
+# @nmcli_device_name
+#   If managing DNS servers via nmcli, this is the device the IPv4 DNS servers
+#   will be added to
 # @param sortlist
 #   Optional Array of address/netmask pairs that allow addresses returned by
 #   gethostbyname to be sorted.
@@ -47,45 +53,65 @@
 #   Optional Array to put any options that may not be covered by the variables
 #   below. These will be appended to the options string.
 class resolv (
-  Array[Simplib::IP,0,3]     $servers        = simplib::lookup('simp_options::dns::servers', { 'default_value' => ['127.0.0.1'] }),
-  Array[Simplib::Domain,0,6] $search         = simplib::lookup('simp_options::dns::search', { 'default_value'  => [$facts['domain']] }),
-  Resolv::Domain             $resolv_domain  = $facts['domain'],
-  Boolean                    $debug          = false,
-  Boolean                    $rotate         = true,
-  Boolean                    $no_check_names = false,
-  Boolean                    $inet6          = false,
-  Integer[0,15]              $ndots          = 1,
-  Integer[0,30]              $timeout        = 2,
-  Integer[0,5]               $attempts       = 2,
-  Boolean                    $named_server   = false,
-  Boolean                    $named_autoconf = true,
-  Boolean                    $caching        = true,
-  Optional[Resolv::Sortlist] $sortlist       = undef,
-  Optional[Array[String]]    $extra_options  = undef,
+  Array[Simplib::IP,0,3]     $servers           = simplib::lookup('simp_options::dns::servers', { 'default_value' => ['127.0.0.1'] }),
+  Array[Simplib::Domain,0,6] $search            = simplib::lookup('simp_options::dns::search', { 'default_value'  => [$facts['domain']] }),
+  Resolv::Domain             $resolv_domain     = $facts['domain'],
+  Boolean                    $debug             = false,
+  Boolean                    $rotate            = true,
+  Boolean                    $no_check_names    = false,
+  Boolean                    $inet6             = false,
+  Integer[0,15]              $ndots             = 1,
+  Integer[0,30]              $timeout           = 2,
+  Integer[0,5]               $attempts          = 2,
+  Boolean                    $named_server      = false,
+  Boolean                    $named_autoconf    = true,
+  Boolean                    $caching           = true,
+  Boolean                    $manage_via_nmcli  = false,
+  Optional[String]           $nmcli_device_name = undef,
+  Optional[Resolv::Sortlist] $sortlist          = undef,
+  Optional[Array[String]]    $extra_options     = undef,
 ) {
 
-  $_resolv_conf_content = epp('resolv/etc/resolv.conf.epp', {
-    'nameservers'    => $servers,
-    'domain'         => $resolv_domain,
-    'search'         => $search,
-    'sortlist'       => $sortlist,
-    'debug'          => $debug,
-    'ndots'          => $ndots,
-    'timeout'        => $timeout,
-    'attempts'       => $attempts,
-    'rotate'         => $rotate,
-    'no_check_names' => $no_check_names,
-    'inet6'          => $inet6,
-    'extra_options'  => $extra_options,
-  })
+  if $manage_via_nmcli {
+    if empty($nmcli_device_name) {
+      fail('Cannot modify DNS servers via nmcli unless a device name is specified. Please ensure resolv::device_name is set to a valid network device name')
+    }
+    else {
+      $_flattened_name_servers = sort($servers.join(' '))
 
-  file { '/etc/resolv.conf':
-    owner   => 'root',
-    group   => 'root',
-    mode    => '0644',
-    content => $_resolv_conf_content,
+      # Add the specified nameservers unless they are already configured for the given device
+      exec { 'Add DNS servers via nmcli':
+        command => "nmcli connection modify ${nmcli_device_name} ipv4.dns \"${_flattened_name_servers}\"",
+        unless  => sort(split("nmcli -f ip4.dns device show ${nmcli_device_name} | sed 's/\s\s*/\t/g' | cut -f 2")) != $_flattened_name_servers,
+      }
+      ~> exec { 'Reapply network device to update DNS servers':
+        command     => "nmcli device reapply ${nmcli_device_name}",
+        refreshonly => true,
+      }
+    }
+  } else {
+    $_resolv_conf_content = epp('resolv/etc/resolv.conf.epp', {
+      'nameservers'    => $servers,
+      'domain'         => $resolv_domain,
+      'search'         => $search,
+      'sortlist'       => $sortlist,
+      'debug'          => $debug,
+      'ndots'          => $ndots,
+      'timeout'        => $timeout,
+      'attempts'       => $attempts,
+      'rotate'         => $rotate,
+      'no_check_names' => $no_check_names,
+      'inet6'          => $inet6,
+      'extra_options'  => $extra_options,
+    })
+
+    file { '/etc/resolv.conf':
+      owner   => 'root',
+      group   => 'root',
+      mode    => '0644',
+      content => $_resolv_conf_content,
+    }
   }
-
 
   # If this client is one of these passed IP's, then make it a real DNS server
   if $named_server or (defined('named') and defined(Class['named'])) or ($named_autoconf and simplib::host_is_me($servers)) {
@@ -121,13 +147,6 @@ class resolv (
     path       => '/etc/sysconfig/network',
     line       => 'PEERDNS=no',
     match      => '^\s*PEERDNS=',
-    deconflict => true  }
-
-  if defined_with_params(Class['named'], {'chroot' => false}) {
-      $bind_pkg = 'bind'
+    deconflict => true,
   }
-  else {
-    $bind_pkg = 'bind-chroot'
-  }
-
 }

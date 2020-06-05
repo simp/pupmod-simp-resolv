@@ -1,3 +1,6 @@
+* Fri Jun 05 2020 Kendall Moore <kendall.moore@onyxpoint.com> - 0.4.0-0
+- Add optional management of DNS servers via nmcli
+
 * Fri Jan 10 2020 Jeanne greulich <jeanne.greulich@onyxpoint.com> - 0.3.0-0
 - Add EL8 support
 - Update the upper bound of simp-simplib to < 5.0.0
