@@ -77,12 +77,12 @@ class resolv (
       fail('Cannot modify DNS servers via nmcli unless a device name is specified. Please ensure resolv::device_name is set to a valid network device name')
     }
     else {
-      $_flattened_name_servers = sort($servers.join(' '))
+      $_flattened_name_servers = $servers.join(' ')
 
       # Add the specified nameservers unless they are already configured for the given device
       exec { 'Add DNS servers via nmcli':
         command => "nmcli connection modify ${nmcli_device_name} ipv4.dns \"${_flattened_name_servers}\"",
-        unless  => sort(split("nmcli -f ip4.dns device show ${nmcli_device_name} | sed 's/\s\s*/\t/g' | cut -f 2")) != $_flattened_name_servers,
+        unless  => "[ \"\$( nmcli -f ip4.dns device show ${nmcli_device_name} | awk '{print \$2}' | tr '\\n' ' ' )\" == \"${_flattened_name_servers} \" ]",
       }
       ~> exec { 'Reapply network device to update DNS servers':
         command     => "nmcli device reapply ${nmcli_device_name}",
