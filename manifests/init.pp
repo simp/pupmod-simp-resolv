@@ -87,12 +87,14 @@ class resolv (
       exec { 'Add DNS servers via nmcli':
         command => "nmcli connection modify ${nmcli_device_name} ipv4.dns \"${_flattened_name_servers}\"",
         unless  => "[ \"\$( nmcli -f ip4.dns device show ${nmcli_device_name} | awk '{print \$2}' | tr '\\n' ' ' )\" == \"${_flattened_name_servers} \" ]",
+        path    => '/bin',
       }
 
       # If specified, reapply the device so that the DNS servers are active
       if $auto_reapply_nmcli_device {
         exec { 'Reapply network device to update DNS servers':
           command     => "nmcli device reapply ${nmcli_device_name}",
+          path        => '/bin',
           subscribe   => Exec['Add DNS servers via nmcli'],
           refreshonly => true,
         }

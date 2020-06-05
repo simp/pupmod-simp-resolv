@@ -43,11 +43,40 @@ describe 'resolv' do
             :inet6 => true,
             :ndots => 5,
             :timeout => 5,
-            :attempts => 5
+            :attempts => 5,
+            :manage_via_nmcli => true,
+            :nmcli_device_name => 'dev0',
+            :auto_reapply_nmcli_device => true
           }}
           let(:expected) { File.read('spec/expected/fancy_resolv.conf') }
           it { is_expected.to compile.with_all_deps }
           it { is_expected.to contain_file('/etc/resolv.conf').with_content(expected) }
+          it { is_expected.to contain_exec('Add DNS servers via nmcli') }
+          it { is_expected.to contain_exec('Reapply network device to update DNS servers').that_subscribes_to('Exec[Add DNS servers via nmcli]') }
+        end
+
+        context 'manage via nmcli and but do not reapply the device' do
+          let(:params) {{
+            :servers => ['1.2.3.4','5.6.7.8'],
+            :manage_via_nmcli => true,
+            :nmcli_device_name => 'dev0',
+            :auto_reapply_nmcli_device => false
+          }}
+          it { is_expected.to compile.with_all_deps }
+          it { is_expected.to contain_exec('Add DNS servers via nmcli') }
+          it { is_expected.not_to contain_exec('Reapply network device to update DNS servers') }
+        end
+
+        context 'node_is_nameserver' do
+          let(:facts) { facts.merge({:ipaddress => '10.0.2.15'}) }
+
+          let(:params) {{
+            :servers => ['1.2.3.4','5.6.7.8','10.0.2.15']
+          }}
+
+          it { is_expected.to compile.with_all_deps }
+          it { is_expected.not_to contain_class('named::caching') }
+          it { is_expected.to contain_class('named') }
         end
 
         context 'node_is_nameserver' do
