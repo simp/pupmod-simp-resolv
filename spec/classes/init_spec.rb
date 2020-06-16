@@ -46,12 +46,14 @@ describe 'resolv' do
             :attempts => 5,
             :manage_via_nmcli => true,
             :nmcli_device_name => 'dev0',
+            :nmcli_ignore_auto_dns => true,
             :auto_reapply_nmcli_device => true
           }}
           let(:expected) { File.read('spec/expected/fancy_resolv.conf') }
           it { is_expected.to compile.with_all_deps }
           it { is_expected.to contain_file('/etc/resolv.conf').with_content(expected) }
           it { is_expected.to contain_exec('Add DNS servers via nmcli') }
+          it { is_expected.to contain_exec('Enable Network Manager ipv4.ignore-auto-dns') }
           it { is_expected.to contain_exec('Reapply network device to update DNS servers').that_subscribes_to('Exec[Add DNS servers via nmcli]') }
         end
 
@@ -60,10 +62,25 @@ describe 'resolv' do
             :servers => ['1.2.3.4','5.6.7.8'],
             :manage_via_nmcli => true,
             :nmcli_device_name => 'dev0',
+            :nmcli_ignore_auto_dns => true,
             :auto_reapply_nmcli_device => false
           }}
           it { is_expected.to compile.with_all_deps }
           it { is_expected.to contain_exec('Add DNS servers via nmcli') }
+          it { is_expected.not_to contain_exec('Reapply network device to update DNS servers') }
+        end
+
+        context 'manage via nmcli and but do not reapply the device and do not disable auto dns' do
+          let(:params) {{
+            :servers => ['1.2.3.4','5.6.7.8'],
+            :manage_via_nmcli => true,
+            :nmcli_device_name => 'dev0',
+            :nmcli_ignore_auto_dns => false,
+            :auto_reapply_nmcli_device => false
+          }}
+          it { is_expected.to compile.with_all_deps }
+          it { is_expected.to contain_exec('Add DNS servers via nmcli') }
+          it { is_expected.not_to contain_exec('Enable Network Manager ipv4.ignore-auto-dns') }
           it { is_expected.not_to contain_exec('Reapply network device to update DNS servers') }
         end
 

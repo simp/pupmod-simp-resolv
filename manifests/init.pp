@@ -46,6 +46,9 @@
 # @nmcli_device_name
 #   If managing DNS servers via nmcli, this is the device the IPv4 DNS servers
 #   will be added to
+# @nmcli_ignore_auto_dns
+#   If true, ignore the automatic DNS entries from Network Manager and instead
+#   only use servers explicitly passed to this manifest
 # @auto_reapply_nmcli_device
 #   If true, call nmcli device reapply on the device that had DNS servers added
 #   to it
@@ -71,6 +74,7 @@ class resolv (
   Boolean                    $caching                   = true,
   Boolean                    $manage_via_nmcli          = false,
   Optional[String]           $nmcli_device_name         = undef,
+  Boolean                    $nmcli_ignore_auto_dns     = true,
   Boolean                    $auto_reapply_nmcli_device = false,
   Optional[Resolv::Sortlist] $sortlist                  = undef,
   Optional[Array[String]]    $extra_options             = undef,
@@ -85,9 +89,19 @@ class resolv (
 
       # Add the specified nameservers unless they are already configured for the given device
       exec { 'Add DNS servers via nmcli':
-        command => "nmcli connection modify ${nmcli_device_name} ipv4.dns \"${_flattened_name_servers}\"",
+        command => "nmcli connection modify \"\$( nmcli -f GENERAL.CONNECTION device show ${nmcli_device_name} | awk '{\$1=\"\"}1' | sed 's/^ //' )\" ipv4.dns \"${_flattened_name_servers}\"",
         unless  => "[ \"\$( nmcli -f ip4.dns device show ${nmcli_device_name} | awk '{print \$2}' | tr '\\n' ' ' )\" == \"${_flattened_name_servers} \" ]",
         path    => '/bin',
+      }
+
+      # If specified, turn off ipv4.ignore-auto-dns in Network Manager
+      if $nmcli_ignore_auto_dns {
+        exec { 'Enable Network Manager ipv4.ignore-auto-dns':
+          command     => "nmcli device modify ${nmcli_device_name} ipv4.ignore-auto-dns yes",
+          path        => '/bin',
+          subscribe   => Exec['Add DNS servers via nmcli'],
+          refreshonly => true,
+        }
       }
 
       # If specified, reapply the device so that the DNS servers are active
