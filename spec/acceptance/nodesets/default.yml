@@ -6,19 +6,19 @@
   end
 -%>
 HOSTS:
-  el7:
+  el7.simp.beaker:
     roles:
       - default
     platform: el-7-x86_64
     box:     centos/7
     hypervisor: <%= hypervisor %>
 
-  el6:
+  el6.simp.beaker:
     platform: el-6-x86_64
     box:     centos/6
     hypervisor: <%= hypervisor %>
 
-  el8:
+  el8.simp.beaker:
     platform: el-8-x86_64
     box:     generic/centos8
     hypervisor: <%= hypervisor %>

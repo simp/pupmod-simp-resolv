@@ -87,21 +87,16 @@ class resolv (
     else {
       $_flattened_name_servers = $servers.join(' ')
 
-      # Add the specified nameservers unless they are already configured for the given device
-      exec { 'Add DNS servers via nmcli':
-        command => "nmcli connection modify \"\$( nmcli -f GENERAL.CONNECTION device show ${nmcli_device_name} | awk '{\$1=\"\"}1' | sed 's/^ //' )\" ipv4.dns \"${_flattened_name_servers}\"",
-        unless  => "[ \"\$( nmcli -f ip4.dns device show ${nmcli_device_name} | awk '{print \$2}' | tr '\\n' ' ' )\" == \"${_flattened_name_servers} \" ]",
-        path    => '/bin',
+      $conn_mod_cmd = $nmcli_ignore_auto_dns ? {
+        true    => "nmcli connection modify \"\$( nmcli -f GENERAL.CONNECTION device show ${nmcli_device_name} | awk '{\$1=\"\"}1' | sed 's/^ //' )\" ipv4.ignore-auto-dns true ipv4.dns \"${_flattened_name_servers}\"",
+        default => "nmcli connection modify \"\$( nmcli -f GENERAL.CONNECTION device show ${nmcli_device_name} | awk '{\$1=\"\"}1' | sed 's/^ //' )\" ipv4.dns \"${_flattened_name_servers}\""
       }
 
-      # If specified, turn off ipv4.ignore-auto-dns in Network Manager
-      if $nmcli_ignore_auto_dns {
-        exec { 'Enable Network Manager ipv4.ignore-auto-dns':
-          command     => "nmcli device modify ${nmcli_device_name} ipv4.ignore-auto-dns yes",
-          path        => '/bin',
-          subscribe   => Exec['Add DNS servers via nmcli'],
-          refreshonly => true,
-        }
+      # Add the specified nameservers unless they are already configured for the given device
+      exec { 'Add DNS servers via nmcli':
+        command => $conn_mod_cmd,
+        unless  => "[ \"\$( nmcli -f ip4.dns device show ${nmcli_device_name} | awk '{print \$2}' | tr '\\n' ' ' )\" == \"${_flattened_name_servers} \" ]",
+        path    => '/bin',
       }
 
       # If specified, reapply the device so that the DNS servers are active
