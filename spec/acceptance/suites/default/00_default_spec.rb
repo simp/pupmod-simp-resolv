@@ -10,10 +10,10 @@ describe 'resolv' do
     let(:manifest) { <<~EOF
       class { 'resolv':
         servers                   => #{servers},
-        manage_via_nmcli          => true,
+        use_nmcli                 => true,
         nmcli_device_name         => $facts['defaultgatewayiface'],
         nmcli_ignore_auto_dns     => true,
-        auto_reapply_nmcli_device => true,
+        nmcli_auto_reapply_device => true,
       }
       EOF
     }

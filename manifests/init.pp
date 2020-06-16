@@ -40,7 +40,7 @@
 #   *If* the $servers array above starts with '127.0.0.1' or '::1', then
 #   the system will set itself up as a caching nameserver unless this is set
 #   to false.
-# @param manage_via_nmcli
+# @param use_nmcli
 #   Allows the user to update DNS entries via nmcli instead of directly
 #   modifying resolv.conf
 # @nmcli_device_name
@@ -49,7 +49,7 @@
 # @nmcli_ignore_auto_dns
 #   If true, ignore the automatic DNS entries from Network Manager and instead
 #   only use servers explicitly passed to this manifest
-# @auto_reapply_nmcli_device
+# @nmcli_auto_reapply_device
 #   If true, call nmcli device reapply on the device that had DNS servers added
 #   to it
 # @param sortlist
@@ -72,15 +72,15 @@ class resolv (
   Boolean                    $named_server              = false,
   Boolean                    $named_autoconf            = true,
   Boolean                    $caching                   = true,
-  Boolean                    $manage_via_nmcli          = false,
+  Boolean                    $use_nmcli                 = false,
   Optional[String]           $nmcli_device_name         = undef,
   Boolean                    $nmcli_ignore_auto_dns     = true,
-  Boolean                    $auto_reapply_nmcli_device = false,
+  Boolean                    $nmcli_auto_reapply_device = false,
   Optional[Resolv::Sortlist] $sortlist                  = undef,
   Optional[Array[String]]    $extra_options             = undef,
 ) {
 
-  if $manage_via_nmcli {
+  if $use_nmcli {
     if empty($nmcli_device_name) {
       fail('Cannot modify DNS servers via nmcli unless a device name is specified. Please ensure resolv::device_name is set to a valid network device name')
     }
@@ -105,7 +105,7 @@ class resolv (
       }
 
       # If specified, reapply the device so that the DNS servers are active
-      if $auto_reapply_nmcli_device {
+      if $nmcli_auto_reapply_device {
         exec { 'Reapply network device to update DNS servers':
           command     => "nmcli device reapply ${nmcli_device_name}",
           path        => '/bin',
