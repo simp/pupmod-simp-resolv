@@ -1,5 +1,3 @@
-# Configure resolv.conf
-#
 # See resolv.conf(5) for details on the various options.
 #
 # @param servers
@@ -81,10 +79,15 @@ class resolv (
 ) {
 
   if $use_nmcli {
+
+    # Make sure we are on EL7 or newer as the nmcli commands on EL6 were not fully featured for managing resolv.conf
+    if ($facts['os']['family'] == 'RedHat') and ($facts['os']['release']['major'] == '6') {
+      fail('This module can only manage resolv.conf via nmcli on EL7 or newer distributions')
+    }
+
     if empty($nmcli_device_name) {
       fail('Cannot modify DNS servers via nmcli unless a device name is specified. Please ensure resolv::device_name is set to a valid network device name')
-    }
-    else {
+    }  else {
       $_flattened_name_servers = $servers.join(' ')
 
       $conn_mod_cmd = $nmcli_ignore_auto_dns ? {

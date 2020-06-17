@@ -30,29 +30,36 @@ describe 'resolv' do
           it { is_expected.not_to contain_class('named::caching') }
         end
 
+        context 'resolv.conf with everything except nmcli set' do
+          let(:params) {{
+            :servers => ['1.2.3.4','5.6.7.8'],
+            :search  => ['test.net'],
+            :sortlist => ['127.0.0.1'],
+            :extra_options => ['foo = bar'],
+            :resolv_domain => 'test.net',
+            :debug => true,
+            :rotate => false,
+            :no_check_names => true,
+            :inet6 => true,
+            :ndots => 5,
+            :timeout => 5,
+            :attempts => 5,
+          }}
+          let(:expected) { File.read('spec/expected/fancy_resolv.conf') }
+          it { is_expected.to compile.with_all_deps }
+          it { is_expected.to contain_file('/etc/resolv.conf').with_content(expected) }
+        end
+
         unless os_facts[:os][:release][:major].to_i < 7
-          context 'resolv.conf with everything set' do
+          context 'manage via nmcli with all settings' do
             let(:params) {{
               :servers => ['1.2.3.4','5.6.7.8'],
-              :search  => ['test.net'],
-              :sortlist => ['127.0.0.1'],
-              :extra_options => ['foo = bar'],
-              :resolv_domain => 'test.net',
-              :debug => true,
-              :rotate => false,
-              :no_check_names => true,
-              :inet6 => true,
-              :ndots => 5,
-              :timeout => 5,
-              :attempts => 5,
               :use_nmcli => true,
               :nmcli_device_name => 'dev0',
               :nmcli_ignore_auto_dns => true,
               :nmcli_auto_reapply_device => true
             }}
-            let(:expected) { File.read('spec/expected/fancy_resolv.conf') }
             it { is_expected.to compile.with_all_deps }
-            it { is_expected.to contain_file('/etc/resolv.conf').with_content(expected) }
             it { is_expected.to contain_exec('Add DNS servers via nmcli') }
             it { is_expected.to contain_exec('Reapply network device to update DNS servers').that_subscribes_to('Exec[Add DNS servers via nmcli]') }
           end
