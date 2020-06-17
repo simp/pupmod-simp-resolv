@@ -96,14 +96,14 @@ class resolv (
       exec { 'Add DNS servers via nmcli':
         command => $conn_mod_cmd,
         unless  => "[ \"\$( nmcli -f ip4.dns device show ${nmcli_device_name} | awk '{print \$2}' | tr '\\n' ' ' )\" == \"${_flattened_name_servers} \" ]",
-        path    => '/bin',
+        path    => '/bin:/usr/bin',
       }
 
       # If specified, reapply the device so that the DNS servers are active
       if $nmcli_auto_reapply_device {
         exec { 'Reapply network device to update DNS servers':
           command     => "nmcli device reapply ${nmcli_device_name}",
-          path        => '/bin',
+          path        => '/bin:/usr/bin',
           subscribe   => Exec['Add DNS servers via nmcli'],
           refreshonly => true,
         }
