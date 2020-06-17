@@ -81,7 +81,7 @@ class resolv (
   if $use_nmcli {
     if empty($nmcli_device_name) {
       fail('Cannot modify DNS servers via nmcli unless a device name is specified. Please ensure resolv::nmcli_device_name is set to a valid network device name')
-    } else { 
+    } else {
       if ! dig($facts, 'simplib__networkmanager', 'connection', $nmcli_device_name) {
         fail("The specified device: ${nmcli_device_name} is not managed by Network Manager and cannot be modified")
       }
