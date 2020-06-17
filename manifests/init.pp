@@ -79,20 +79,24 @@ class resolv (
 ) {
 
   if $use_nmcli {
-
-    # Make sure we are on EL7 or newer as the nmcli commands on EL6 were not fully featured for managing resolv.conf
-    if ($facts['os']['family'] == 'RedHat') and ($facts['os']['release']['major'] == '6') {
-      fail('This module can only manage resolv.conf via nmcli on EL7 or newer distributions')
-    }
-
     if empty($nmcli_device_name) {
-      fail('Cannot modify DNS servers via nmcli unless a device name is specified. Please ensure resolv::device_name is set to a valid network device name')
-    }  else {
+      fail('Cannot modify DNS servers via nmcli unless a device name is specified. Please ensure resolv::nmcli_device_name is set to a valid network device name')
+    } else { 
+      if ! dig($facts, 'simplib__networkmanager', 'connection', $nmcli_device_name) {
+        fail("The specified device: ${nmcli_device_name} is not managed by Network Manager and cannot be modified")
+      }
+
+      # Make sure we are on EL7 or newer as the nmcli commands on EL6 were not fully featured for managing resolv.conf
+      if ($facts['os']['family'] == 'RedHat') and ($facts['os']['release']['major'] == '6') {
+        fail('This module can only manage resolv.conf via nmcli on EL7 or newer distributions')
+      }
+
       $_flattened_name_servers = $servers.join(' ')
+      $conn_name = dig($facts, 'simplib__networkmanager', 'connection', $nmcli_device_name, 'name')
 
       $conn_mod_cmd = $nmcli_ignore_auto_dns ? {
-        true    => "nmcli connection modify \"\$( nmcli -f GENERAL.CONNECTION device show ${nmcli_device_name} | awk '{\$1=\"\"}1' | sed 's/^ //' )\" ipv4.ignore-auto-dns true ipv4.dns \"${_flattened_name_servers}\"",
-        default => "nmcli connection modify \"\$( nmcli -f GENERAL.CONNECTION device show ${nmcli_device_name} | awk '{\$1=\"\"}1' | sed 's/^ //' )\" ipv4.dns \"${_flattened_name_servers}\""
+        true    => "nmcli connection modify \"${conn_name}\" ipv4.ignore-auto-dns true ipv4.dns \"${_flattened_name_servers}\"",
+        default => "nmcli connection modify \"${conn_name}\" ipv4.dns \"${_flattened_name_servers}\""
       }
 
       # Add the specified nameservers unless they are already configured for the given device
