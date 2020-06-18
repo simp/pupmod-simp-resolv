@@ -42,6 +42,7 @@ This module is optimally designed for use within a larger SIMP ecosystem, but it
 
   * `/etc/resolv.conf`
   * `/etc/host.conf`
+  * `Network Manager`
 
 
 ### Beginning with resolv
@@ -61,10 +62,22 @@ classes:
 
 File contents can be tweaked by adding more hieradata:
 
-```
+```yaml
 ---
 resolv::rotate: false
 resolv::host_conf::multi: true
+```
+
+## nmcli
+
+Managing device DNS entries can be done via nmcli accordingly:
+
+```yaml
+---
+resolv::use_nmcli: true
+resolv::nmcli_device_name: 'eth0'
+resolv::nmcli_ignore_auto_dns: true
+resolv::nmcli_auto_reapply_device: true
 ```
 
 ## Reference

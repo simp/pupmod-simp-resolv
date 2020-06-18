@@ -1,5 +1,3 @@
-# Configure resolv.conf
-#
 # See resolv.conf(5) for details on the various options.
 #
 # @param servers
@@ -40,6 +38,18 @@
 #   *If* the $servers array above starts with '127.0.0.1' or '::1', then
 #   the system will set itself up as a caching nameserver unless this is set
 #   to false.
+# @param use_nmcli
+#   Allows the user to update DNS entries via nmcli instead of directly
+#   modifying resolv.conf
+# @nmcli_device_name
+#   If managing DNS servers via nmcli, this is the device the IPv4 DNS servers
+#   will be added to
+# @nmcli_ignore_auto_dns
+#   If true, ignore the automatic DNS entries from Network Manager and instead
+#   only use servers explicitly passed to this manifest
+# @nmcli_auto_reapply_device
+#   If true, call nmcli device reapply on the device that had DNS servers added
+#   to it
 # @param sortlist
 #   Optional Array of address/netmask pairs that allow addresses returned by
 #   gethostbyname to be sorted.
@@ -47,22 +57,66 @@
 #   Optional Array to put any options that may not be covered by the variables
 #   below. These will be appended to the options string.
 class resolv (
-  Array[Simplib::IP,0,3]     $servers        = simplib::lookup('simp_options::dns::servers', { 'default_value' => ['127.0.0.1'] }),
-  Array[Simplib::Domain,0,6] $search         = simplib::lookup('simp_options::dns::search', { 'default_value'  => [$facts['domain']] }),
-  Resolv::Domain             $resolv_domain  = $facts['domain'],
-  Boolean                    $debug          = false,
-  Boolean                    $rotate         = true,
-  Boolean                    $no_check_names = false,
-  Boolean                    $inet6          = false,
-  Integer[0,15]              $ndots          = 1,
-  Integer[0,30]              $timeout        = 2,
-  Integer[0,5]               $attempts       = 2,
-  Boolean                    $named_server   = false,
-  Boolean                    $named_autoconf = true,
-  Boolean                    $caching        = true,
-  Optional[Resolv::Sortlist] $sortlist       = undef,
-  Optional[Array[String]]    $extra_options  = undef,
+  Array[Simplib::IP,0,3]     $servers                   = simplib::lookup('simp_options::dns::servers', { 'default_value' => ['127.0.0.1'] }),
+  Array[Simplib::Domain,0,6] $search                    = simplib::lookup('simp_options::dns::search', { 'default_value'  => [$facts['domain']] }),
+  Resolv::Domain             $resolv_domain             = $facts['domain'],
+  Boolean                    $debug                     = false,
+  Boolean                    $rotate                    = true,
+  Boolean                    $no_check_names            = false,
+  Boolean                    $inet6                     = false,
+  Integer[0,15]              $ndots                     = 1,
+  Integer[0,30]              $timeout                   = 2,
+  Integer[0,5]               $attempts                  = 2,
+  Boolean                    $named_server              = false,
+  Boolean                    $named_autoconf            = true,
+  Boolean                    $caching                   = true,
+  Boolean                    $use_nmcli                 = false,
+  Optional[String]           $nmcli_device_name         = undef,
+  Boolean                    $nmcli_ignore_auto_dns     = true,
+  Boolean                    $nmcli_auto_reapply_device = false,
+  Optional[Resolv::Sortlist] $sortlist                  = undef,
+  Optional[Array[String]]    $extra_options             = undef,
 ) {
+
+  if $use_nmcli {
+    if empty($nmcli_device_name) {
+      fail('Cannot modify DNS servers via nmcli unless a device name is specified. Please ensure resolv::nmcli_device_name is set to a valid network device name')
+    } else {
+      if ! dig($facts, 'simplib__networkmanager', 'connection', $nmcli_device_name) {
+        fail("The specified device: ${nmcli_device_name} is not managed by Network Manager and cannot be modified")
+      }
+
+      # Make sure we are on EL7 or newer as the nmcli commands on EL6 were not fully featured for managing resolv.conf
+      if ($facts['os']['family'] == 'RedHat') and ($facts['os']['release']['major'] == '6') {
+        fail('This module can only manage resolv.conf via nmcli on EL7 or newer distributions')
+      }
+
+      $_flattened_name_servers = $servers.join(' ')
+      $conn_name = dig($facts, 'simplib__networkmanager', 'connection', $nmcli_device_name, 'name')
+
+      $conn_mod_cmd = $nmcli_ignore_auto_dns ? {
+        true    => "nmcli connection modify \"${conn_name}\" ipv4.ignore-auto-dns true ipv4.dns \"${_flattened_name_servers}\"",
+        default => "nmcli connection modify \"${conn_name}\" ipv4.dns \"${_flattened_name_servers}\""
+      }
+
+      # Add the specified nameservers unless they are already configured for the given device
+      exec { 'Add DNS servers via nmcli':
+        command => $conn_mod_cmd,
+        unless  => "[ \"\$( nmcli -f ip4.dns device show ${nmcli_device_name} | awk '{print \$2}' | tr '\\n' ' ' )\" == \"${_flattened_name_servers} \" ]",
+        path    => '/bin:/usr/bin',
+      }
+
+      # If specified, reapply the device so that the DNS servers are active
+      if $nmcli_auto_reapply_device {
+        exec { 'Reapply network device to update DNS servers':
+          command     => "nmcli device reapply ${nmcli_device_name}",
+          path        => '/bin:/usr/bin',
+          subscribe   => Exec['Add DNS servers via nmcli'],
+          refreshonly => true,
+        }
+      }
+    }
+  }
 
   $_resolv_conf_content = epp('resolv/etc/resolv.conf.epp', {
     'nameservers'    => $servers,
@@ -85,7 +139,6 @@ class resolv (
     mode    => '0644',
     content => $_resolv_conf_content,
   }
-
 
   # If this client is one of these passed IP's, then make it a real DNS server
   if $named_server or (defined('named') and defined(Class['named'])) or ($named_autoconf and simplib::host_is_me($servers)) {
@@ -121,13 +174,6 @@ class resolv (
     path       => '/etc/sysconfig/network',
     line       => 'PEERDNS=no',
     match      => '^\s*PEERDNS=',
-    deconflict => true  }
-
-  if defined_with_params(Class['named'], {'chroot' => false}) {
-      $bind_pkg = 'bind'
+    deconflict => true,
   }
-  else {
-    $bind_pkg = 'bind-chroot'
-  }
-
 }
