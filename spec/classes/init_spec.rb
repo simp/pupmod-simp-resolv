@@ -20,7 +20,7 @@ describe 'resolv' do
         context 'with default parameters' do
           let(:params) {{
             :servers => ['1.2.3.4','5.6.7.8']
-            }}
+          }}
           let(:expected) { File.read('spec/expected/default_resolv.conf') }
           it { is_expected.to compile.with_all_deps }
           it { is_expected.to contain_file('/etc/resolv.conf').with_content(expected) }
@@ -78,7 +78,7 @@ describe 'resolv' do
               let(:params) {{
                 :servers => ['1.2.3.4','5.6.7.8'],
                 :use_nmcli => true,
-                :nmcli_device_name => 'eth0',
+                :nmcli_connection_name => 'System eth0',
                 :nmcli_ignore_auto_dns => true,
                 :nmcli_auto_reapply_device => true
               }}
@@ -91,7 +91,7 @@ describe 'resolv' do
               let(:params) {{
                 :servers => ['1.2.3.4','5.6.7.8'],
                 :use_nmcli => true,
-                :nmcli_device_name => 'eth0',
+                :nmcli_connection_name => 'System eth0',
                 :nmcli_ignore_auto_dns => true,
                 :nmcli_auto_reapply_device => false
               }}

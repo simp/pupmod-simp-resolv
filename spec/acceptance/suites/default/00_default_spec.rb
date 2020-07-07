@@ -86,7 +86,7 @@ describe 'resolv' do
             class { 'resolv':
               servers                   => #{servers},
               use_nmcli                 => true,
-              nmcli_device_name         => $facts['defaultgatewayiface'],
+              nmcli_connection_name     => "System eth0",
               nmcli_ignore_auto_dns     => true,
               nmcli_auto_reapply_device => true,
             }
@@ -121,7 +121,7 @@ describe 'resolv' do
             %{sed -i -e '/^NM_CONTROLLED=/d;$a NM_CONTROLLED=no' /etc/sysconfig/network-scripts/ifcfg-#{device} && systemctl restart NetworkManager}
 
           result = apply_manifest_on(host, manifest, expect_failures: true)
-          expect(result.stderr).to match %r{The specified device: #{device} is not managed}
+          expect(result.stderr).to match %r{The specified connection: "System eth0" is not managed}
         end
       end
     end
