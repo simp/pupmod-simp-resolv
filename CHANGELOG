@@ -1,3 +1,8 @@
+* Tue Jul 07 2020 Kendall Moore <kendall.moore@onyxpoint.com> - 0.4.1-0
+- Use connection name instead of device name for managing with nmcli
+- Update REFERENCE.md to include new class params
+- Improved error handling for Network Manager
+
 * Fri Jun 05 2020 Kendall Moore <kendall.moore@onyxpoint.com> - 0.4.0-0
 - Add optional management of DNS servers via nmcli
 

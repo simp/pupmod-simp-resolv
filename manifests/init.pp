@@ -41,7 +41,7 @@
 # @param use_nmcli
 #   Allows the user to update DNS entries via nmcli instead of directly
 #   modifying resolv.conf
-# @nmcli_device_name
+# @nmcli_connection_name
 #   If managing DNS servers via nmcli, this is the device the IPv4 DNS servers
 #   will be added to
 # @nmcli_ignore_auto_dns
@@ -71,48 +71,57 @@ class resolv (
   Boolean                    $named_autoconf            = true,
   Boolean                    $caching                   = true,
   Boolean                    $use_nmcli                 = false,
-  Optional[String]           $nmcli_device_name         = undef,
+  Optional[String]           $nmcli_connection_name     = undef,
   Boolean                    $nmcli_ignore_auto_dns     = true,
   Boolean                    $nmcli_auto_reapply_device = false,
   Optional[Resolv::Sortlist] $sortlist                  = undef,
   Optional[Array[String]]    $extra_options             = undef,
 ) {
-
   if $use_nmcli {
-    if empty($nmcli_device_name) {
-      fail('Cannot modify DNS servers via nmcli unless a device name is specified. Please ensure resolv::nmcli_device_name is set to a valid network device name')
-    } else {
-      if ! dig($facts, 'simplib__networkmanager', 'connection', $nmcli_device_name) {
-        fail("The specified device: ${nmcli_device_name} is not managed by Network Manager and cannot be modified")
-      }
 
-      # Make sure we are on EL7 or newer as the nmcli commands on EL6 were not fully featured for managing resolv.conf
-      if ($facts['os']['family'] == 'RedHat') and ($facts['os']['release']['major'] == '6') {
-        fail('This module can only manage resolv.conf via nmcli on EL7 or newer distributions')
-      }
+    # Make sure we are on EL7 or newer as the nmcli commands on EL6 were not fully featured for managing resolv.conf
+    if ($facts['os']['family'] == 'RedHat') and ($facts['os']['release']['major'] == '6') {
+      fail('This module can only manage DNS servers via nmcli on EL7 or newer distributions')
+    }
 
-      $_flattened_name_servers = $servers.join(' ')
-      $conn_name = dig($facts, 'simplib__networkmanager', 'connection', $nmcli_device_name, 'name')
+    # Make sure the user has specified a connection to modify
+    if empty($nmcli_connection_name) {
+      fail('Cannot modify DNS servers via nmcli unless a connection name is specified. Please ensure resolv::nmcli_connection_name is set to a valid network connection name')
+    }
 
-      $conn_mod_cmd = $nmcli_ignore_auto_dns ? {
-        true    => "nmcli connection modify \"${conn_name}\" ipv4.ignore-auto-dns true ipv4.dns \"${_flattened_name_servers}\"",
-        default => "nmcli connection modify \"${conn_name}\" ipv4.dns \"${_flattened_name_servers}\""
-      }
+    $device_names = dig($facts, 'simplib__networkmanager', 'connection')
 
-      # Add the specified nameservers unless they are already configured for the given device
-      exec { 'Add DNS servers via nmcli':
-        command => $conn_mod_cmd,
-        unless  => "[ \"\$( nmcli -f ip4.dns device show ${nmcli_device_name} | awk '{print \$2}' | tr '\\n' ' ' )\" == \"${_flattened_name_servers} \" ]",
-        path    => '/bin:/usr/bin',
-      }
+    # Check to ensure Network Manager is active
+    if ! $device_names {
+      fail('There are no connections being managed by Network Manager which are able to be modified')
+    }
 
-      # If specified, reapply the device so that the DNS servers are active
-      if $nmcli_auto_reapply_device {
-        exec { 'Reapply network device to update DNS servers':
-          command     => "nmcli device reapply ${nmcli_device_name}",
-          path        => '/bin:/usr/bin',
-          subscribe   => Exec['Add DNS servers via nmcli'],
-          refreshonly => true,
+    # Check to ensure the user-specified connection is managed by Network Manager
+    if ! $device_names.any |$name, $properties| {
+      $properties['name'] == $nmcli_connection_name
+    } {
+      fail("The specified connection: \"${nmcli_connection_name}\" is not managed by Network Manager and cannot be modified")
+    }
+
+    $device_names.each |String $device_name, Hash $conn_properties| {
+      if $conn_properties['name'] == $nmcli_connection_name {
+        $_flattened_name_servers = $servers.join(' ')
+
+        # Add the specified nameservers unless they are already configured for the given device
+        exec { 'Add DNS servers via nmcli':
+          command => "nmcli connection modify \"${nmcli_connection_name}\" ipv4.ignore-auto-dns ${nmcli_ignore_auto_dns} ipv4.dns \"${_flattened_name_servers}\"",
+          unless  => "[ \"\$( nmcli -f ipv4.dns connection show \"${nmcli_connection_name}\" | awk '{print \$2}' | tr '\\n' ' ' | tr ',' ' ' )\" == \"${_flattened_name_servers} \" ]",
+          path    => '/bin:/usr/bin',
+        }
+
+        # If specified, reapply the device so that the DNS servers are active
+        if $nmcli_auto_reapply_device {
+          exec { 'Reapply network device to update DNS servers':
+            command     => "nmcli device reapply \"${device_name}\"",
+            path        => '/bin:/usr/bin',
+            subscribe   => Exec['Add DNS servers via nmcli'],
+            refreshonly => true,
+          }
         }
       }
     }
