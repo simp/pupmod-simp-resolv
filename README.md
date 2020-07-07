@@ -75,7 +75,7 @@ Managing device DNS entries can be done via nmcli accordingly:
 ```yaml
 ---
 resolv::use_nmcli: true
-resolv::nmcli_device_name: 'eth0'
+resolv::nmcli_connection_name: 'System eth0'
 resolv::nmcli_ignore_auto_dns: true
 resolv::nmcli_auto_reapply_device: true
 ```

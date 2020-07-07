@@ -141,6 +141,49 @@ to false.
 
 Default value: `true`
 
+##### `use_nmcli`
+
+Data type: `Boolean`
+
+Specify if the $servers should be applied via nmcli in addition to being
+managed via resolv.conf
+
+Default value: `false`
+
+##### `nmcli_connection_name`
+
+Data type: `Optional[String]`
+
+If managing DNS servers via nmcli, this is the connection the IPv4 DNS
+servers will be added to
+
+Default value: `undef`
+
+##### `nmcli_ignore_auto_dns`
+
+Data type: `Boolean`
+
+A boolean that toggles the ignore_auto_dns flag for nmcli
+
+true => ignore the automatic DNS entries from Network Manager and instead
+only use servers explicitly passed to this manifest
+false => include the DNS entries from Network Manager
+
+Default value: `true`
+
+##### `nmcli_auto_reapply_device`
+
+Data type: `Boolean`
+
+A boolean to toggle automatic device reapplies for affected Network Manager
+device
+
+true => trigger a device reapply on the device that had DNS servers added
+to it
+false => do not trigger any device reapply
+
+Default value: `false`
+
 ##### `sortlist`
 
 Data type: `Optional[Resolv::Sortlist]`
