@@ -1,3 +1,10 @@
+* Tue Dec 15 2020 Trevor Vaughan <tvaughan@onyxpoint.com> - 0.6.0-0
+- Use config files for managing the global NetworkManager configuration
+- Remove EL 6 support since the OS is no longer supported
+- Add the ability to precisely update the resolv.conf contents
+- Add the ability to specify the entire contents of the resolv.conf
+- Add the ability to remove the resolv.conf completely
+
 * Tue Jul 07 2020 Kendall Moore <kendall.moore@onyxpoint.com> - 0.5.0-0
 - Use connection name instead of device name for managing with nmcli
 - Update REFERENCE.md to include new class params

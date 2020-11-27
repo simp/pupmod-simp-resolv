@@ -1,0 +1,23 @@
+<%- |
+Variant[Boolean[false], Array[Simplib::IP,0,3]] $nameservers = [],
+Variant[Boolean[false], Array[Simplib::Domain]] $search      = [],
+Array[NotUndef]                                 $options     = []
+|
+-%>
+[main]
+dns=default
+<% if ($search and !empty($search)) or ($options and !empty($options)) { -%>
+
+[global-dns]
+<%   if ($search and !empty($search)) { -%>
+searches=<%= $search.join(',') %>
+<%   } -%>
+<%   if ($options and !empty($options)) { -%>
+options=<%= $options.join(',') %>
+<%   } -%>
+<% } -%>
+<% if ($nameservers and !empty($nameservers)) { -%>
+
+[global-dns-domain-*]
+servers=<%= $nameservers.join(',') %>
+<% } -%>
