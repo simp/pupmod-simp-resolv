@@ -1,6 +1,6 @@
 {
   "name": "simp-resolv",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "author": "SIMP Team",
   "summary": "A SIMP Puppet module for managing client-side DNS settings",
   "license": "Apache-2.0",
@@ -23,14 +23,13 @@
     },
     {
       "name": "puppetlabs/stdlib",
-      "version_requirement": ">= 4.13.1 < 7.0.0"
+      "version_requirement": ">= 6.3.0 < 7.0.0"
     }
   ],
   "operatingsystem_support": [
     {
       "operatingsystem": "CentOS",
       "operatingsystemrelease": [
-        "6",
         "7",
         "8"
       ]
@@ -38,7 +37,6 @@
     {
       "operatingsystem": "RedHat",
       "operatingsystemrelease": [
-        "6",
         "7",
         "8"
       ]
@@ -46,7 +44,6 @@
     {
       "operatingsystem": "OracleLinux",
       "operatingsystemrelease": [
-        "6",
         "7",
         "8"
       ]

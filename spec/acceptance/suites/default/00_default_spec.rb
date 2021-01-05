@@ -6,11 +6,25 @@ describe 'resolv' do
   servers = ['8.8.8.8', '8.8.4.4', '1.1.1.1']
 
   hosts.each do |host|
-    context "on #{host} with default options" do
+    context "prep #{host}" do
+      # This is in place for EL8 and is due to single-request-reopen being
+      # spammed into set by /etc/NetworkManager/dispatcher.d/fix-slow-dns which
+      # appears to be a bug in the CentOS Vagrant image.
+      it 'should remove the fix-slow-dns script' do
+        on(host, 'puppet resource file /etc/NetworkManager/dispatcher.d/fix-slow-dns ensure=absent')
+        on(host, %{sed -i '/options/d' /etc/resolv.conf})
+      end
+    end
+  end
+
+  hosts.each do |host|
+    context "on #{host} with default options and not networkmanager" do
       let(:manifest) do
         <<~EOF
           class { 'resolv':
-            servers                   => #{servers},
+            servers   => #{servers},
+            search    => ['simp.beaker', 'foo.bar', 'bar.baz'],
+            use_nmcli => false
           }
         EOF
       end
@@ -22,73 +36,187 @@ describe 'resolv' do
       it 'should be idempotent' do
         apply_manifest_on(host, manifest, catch_changes: true)
       end
+
+      it 'should have a properly filled /etc/resolv.conf' do
+        expected_content = <<~EXPECTED
+        search simp.beaker foo.bar bar.baz
+        nameserver 8.8.8.8
+        nameserver 8.8.4.4
+        nameserver 1.1.1.1
+        options attempts:2 ndots:1 rotate timeout:2
+        EXPECTED
+
+        expect(file_content_on(host, '/etc/resolv.conf').strip).to eq(expected_content.strip)
+      end
     end
 
-    if pfact_on(host, 'operatingsystemmajrelease').to_i >= 7
-      context "on #{host} with default options using legacy network" do
-        let(:manifest) do
-          <<~EOF
-            if $facts['os']['release']['major'] == '7' {
-              $package = 'initscripts'
-            } else {
-              $package = 'network-scripts'
-            }
-            package { $package:
-              ensure => installed,
-            }
-            -> service { 'NetworkManager':
-              ensure => stopped,
-              enable => false,
-            }
-            -> service { 'network':
-              ensure => running,
-              enable => true,
-            }
-            -> class { 'resolv':
-              servers => #{servers},
-            }
-          EOF
-        end
-
-        it 'should apply with no errors' do
-          apply_manifest_on(host, manifest)
-        end
+    context "on #{host} with disabled options" do
+      let(:manifest) do
+        <<~EOF
+          class { 'resolv':
+            servers   => #{servers},
+            search    => ['simp.beaker', 'foo.bar', 'bar.baz'],
+            use_nmcli => false,
+            rotate    => false,
+            attempts  => false,
+            ndots     => false,
+            timeout   => false
+          }
+        EOF
       end
 
-      context "on #{host} with default options using NM" do
-        let(:manifest) do
-          <<~EOF
-            package { 'NetworkManager':
-              ensure => installed,
-            }
-            -> service { 'network':
-              ensure => stopped,
-              enable => false,
-            }
-            -> service { 'NetworkManager':
-              ensure => running,
-              enable => true,
-            }
-            -> class { 'resolv':
-              servers => #{servers},
-            }
-          EOF
-        end
-
-        it 'should apply with no errors' do
-          apply_manifest_on(host, manifest)
-        end
+      it 'should apply with no errors' do
+        apply_manifest_on(host, manifest)
       end
 
-      context "on #{host} with NetworkManager" do
+      it 'should be idempotent' do
+        apply_manifest_on(host, manifest, catch_changes: true)
+      end
+
+      it 'should have a properly filled /etc/resolv.conf' do
+        expected_content = <<~EXPECTED
+        search simp.beaker foo.bar bar.baz
+        nameserver 8.8.8.8
+        nameserver 8.8.4.4
+        nameserver 1.1.1.1
+        EXPECTED
+
+        expect(file_content_on(host, '/etc/resolv.conf').strip).to eq(expected_content.strip)
+      end
+    end
+
+    context "on #{host} enabling all default options" do
+      let(:manifest) do
+        <<~EOF
+          class { 'resolv':
+            servers        => #{servers},
+            use_nmcli      => false,
+            search         => ['simp.beaker', 'foo.bar', 'bar.baz'],
+            debug          => true,
+            no_check_names => true,
+            sortlist       => ['1.2.3.0/255.255.255.0', '2.3.0.0/255.255.0.0'],
+            extra_options  => ['edns0']
+          }
+        EOF
+      end
+
+      it 'should apply with no errors' do
+        apply_manifest_on(host, manifest)
+      end
+
+      it 'should be idempotent' do
+        apply_manifest_on(host, manifest, catch_changes: true)
+      end
+
+      it 'should have a properly filled /etc/resolv.conf' do
+        expected_content = <<~EXPECTED
+        search simp.beaker foo.bar bar.baz
+        nameserver 8.8.8.8
+        nameserver 8.8.4.4
+        nameserver 1.1.1.1
+        sortlist 1.2.3.0/255.255.255.0 2.3.0.0/255.255.0.0
+        options attempts:2 debug edns0 ndots:1 no-check-names rotate timeout:2
+        EXPECTED
+
+        expect(file_content_on(host, '/etc/resolv.conf').strip).to eq(expected_content.strip)
+      end
+    end
+
+    context "on #{host} setting the content directly" do
+      let(:manifest) do
+        <<~EOF
+          class { 'resolv':
+            servers        => #{servers},
+            use_nmcli      => false,
+            search         => ['simp.beaker', 'foo.bar', 'bar.baz'],
+            debug          => true,
+            no_check_names => true,
+            sortlist       => ['3.4.5.0/255.255.255.0', '2.3.0.0/255.255.0.0'],
+            extra_options  => ['edns0'],
+            content        => "nameserver 8.8.8.8  \n   nameserver 1.1.1.1"
+          }
+        EOF
+      end
+
+      it 'should apply with no errors' do
+        apply_manifest_on(host, manifest)
+      end
+
+      it 'should be idempotent' do
+        apply_manifest_on(host, manifest, catch_changes: true)
+      end
+
+      it 'should have a properly filled /etc/resolv.conf' do
+        expected_content = <<~EXPECTED
+        nameserver 8.8.8.8
+        nameserver 1.1.1.1
+        EXPECTED
+
+        expect(file_content_on(host, '/etc/resolv.conf').strip).to eq(expected_content.strip)
+      end
+    end
+
+    context "on #{host} with default options using legacy network" do
+      let(:manifest) do
+        <<~EOF
+          if $facts['os']['release']['major'] == '7' {
+            $package = 'initscripts'
+          } else {
+            $package = 'network-scripts'
+          }
+          package { $package:
+            ensure => installed,
+          }
+          -> service { 'NetworkManager':
+            ensure => stopped,
+            enable => false,
+          }
+          -> service { 'network':
+            ensure => running,
+            enable => true,
+          }
+          -> class { 'resolv':
+            servers => #{servers},
+          }
+        EOF
+      end
+
+      it 'should apply with no errors' do
+        apply_manifest_on(host, manifest)
+      end
+    end
+
+    context "on #{host} with default options using NM" do
+      let(:manifest) do
+        <<~EOF
+          package { 'NetworkManager':
+            ensure => installed,
+          }
+          -> service { 'network':
+            ensure => stopped,
+            enable => false,
+          }
+          -> service { 'NetworkManager':
+            ensure => running,
+            enable => true,
+          }
+          -> class { 'resolv':
+            servers => #{servers},
+          }
+        EOF
+      end
+
+      it 'should apply with no errors' do
+        apply_manifest_on(host, manifest)
+      end
+    end
+
+    context "on #{host} with NetworkManager" do
+      context 'by default' do
         let(:manifest) do
           <<~EOF
             class { 'resolv':
-              servers                   => #{servers},
-              use_nmcli                 => true,
-              nmcli_connection_name     => "System eth0",
-              nmcli_ignore_auto_dns     => true,
-              nmcli_auto_reapply_device => true,
+              servers => #{servers}
             }
           EOF
         end
@@ -101,27 +229,49 @@ describe 'resolv' do
           apply_manifest_on(host, manifest, catch_changes: true)
         end
 
-        it 'should list all of the new DNS servers in the device information' do
-          device = pfact_on(host, 'defaultgatewayiface')
+        it 'should have a properly filled /etc/resolv.conf' do
+          expected_content = <<~EXPECTED
+          # Generated by NetworkManager
+          search simp.beaker
+          nameserver 8.8.8.8
+          nameserver 8.8.4.4
+          nameserver 1.1.1.1
+          options attempts:2 ndots:1 rotate timeout:2
+          EXPECTED
 
-          result = on host,
-            %{nmcli -f ip4.dns device show #{device} | awk '{print $2}'},
-            :accept_all_exit_codes => true
+          expect(file_content_on(host, '/etc/resolv.conf').strip).to eq(expected_content.strip)
+        end
+      end
 
-          nameservers = result.stdout.split("\n")
-
-          # Ensure list of nameservers matches the nameservers declared in the Puppet manifest
-          expect(nameservers).to eq(servers)
+      context 'when forcing nmcli off' do
+        let(:manifest) do
+          <<~EOF
+            class { 'resolv':
+              servers   => #{servers},
+              use_nmcli => false,
+              rotate    => false
+            }
+          EOF
         end
 
-        it 'should fail gracefully on an unmanaged interface' do
-          device = pfact_on(host, 'defaultgatewayiface')
+        it 'should apply with no errors' do
+          apply_manifest_on(host, manifest)
+        end
 
-          on host,
-            %{sed -i -e '/^NM_CONTROLLED=/d;$a NM_CONTROLLED=no' /etc/sysconfig/network-scripts/ifcfg-#{device} && systemctl restart NetworkManager}
+        it 'should be idempotent' do
+          apply_manifest_on(host, manifest, catch_changes: true)
+        end
 
-          result = apply_manifest_on(host, manifest, expect_failures: true)
-          expect(result.stderr).to match %r{The specified connection: "System eth0" is not managed}
+        it 'should have a properly filled /etc/resolv.conf' do
+          expected_content = <<~EXPECTED
+          search simp.beaker
+          nameserver 8.8.8.8
+          nameserver 8.8.4.4
+          nameserver 1.1.1.1
+          options attempts:2 ndots:1 timeout:2
+          EXPECTED
+
+          expect(file_content_on(host, '/etc/resolv.conf').strip).to eq(expected_content.strip)
         end
       end
     end

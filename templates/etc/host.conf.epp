@@ -1,0 +1,11 @@
+<%- |
+Boolean                   $multi,
+Boolean                   $reorder,
+Optional[Array[NotUndef]] $trim = undef
+|
+-%>
+multi <%= $multi ? { true => 'on', default => 'off' } %>
+reorder <%= $reorder ? { true => 'on', default => 'off' } %>
+<% if $trim { -%>
+trim <%= join($trim, ',') %>
+<% } -%>

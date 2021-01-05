@@ -1,53 +1,74 @@
 <%- |
-Array[Simplib::IP,0,3]     $nameservers    = [],
-Array[Simplib::Domain,0,6] $search         = [],
-Resolv::Sortlist           $sortlist       = [],
-Boolean                    $debug          = false,
-Integer[0,15]              $ndots          = 1,
-Integer[0,30]              $timeout        = 2,
-Integer[0,5]               $attempts       = 2,
-Boolean                    $rotate         = true,
-Boolean                    $no_check_names = false,
-Boolean                    $inet6          = false,
-Array[String]              $extra_options  = [],
-Optional[Resolv::Domain]   $domain,
+Variant[Boolean[false], Array[Simplib::IP,0,3]]     $nameservers = [],
+Variant[Boolean[false], Array[Simplib::Domain,0,6]] $search      = [],
+Variant[Boolean[false], Resolv::Sortlist]           $sortlist    = [],
+Array[NotUndef]                                     $options     = [],
+Variant[Boolean[false], Optional[Resolv::Domain]]   $domain      = undef,
 |
-
-if !$nameservers.empty {
-  if $nameservers[0] == '127.0.0.1' or $nameservers[0] == '::1' {
-    $_nameservers = [ $nameservers[0] ]
-  } else {
-    $_nameservers = $nameservers
-  }
-} else {
-  $_nameservers = []
-}
-
-$_options = [
-  $debug ? { true => 'debug', false => undef },
-  "ndots:${ndots}",
-  "timeout:${timeout}",
-  "attempts:${attempts}",
-  $rotate ? { true => 'rotate', false => undef },
-  $no_check_names ? { true => 'no-check-names', false => undef },
-  $inet6 ? { true => 'inet6', false => undef },
-  $extra_options.empty ? { true => undef, false => $extra_options.join(' ') },
-].delete_undef_values.join(' ')
-
 -%>
-# This file is managed by Puppet (module 'resolv')
-<%= (!$nameservers.empty) ? {
-  true  => $nameservers.map |$ns| { "nameserver ${ns}" }.join("\n"),
-  false => '# NOTE: No nameservers specified',
-} %>
-<%= (defined('$domain') and !$domain.empty) ? {
-  true  => "domain ${domain}",
-  false => '# NOTE: No domain specified',
-} %>
-<%- if !$search.empty { -%>
-search <%= $search.join(' ') %>
-<%- } -%>
-<%- if !$sortlist.empty { -%>
-sortlist <%= $sortlist.join(' ') %>
-<%- } -%>
-options <%= $_options %>
+rm #comment
+<% if $nameservers == false { -%>
+rm nameserver
+<% } -%>
+<% else { -%>
+<%   unless empty($nameservers) { -%>
+rm nameserver[.!="<%= $nameservers.join('" and .!="') %>"]
+<%     $nameservers.each |$nameserver| { -%>
+set nameserver[.="<%= $nameserver %>"] <%= $nameserver %>
+<%     } -%>
+<%   } -%>
+<% } -%>
+<% if $domain == false { -%>
+rm domain
+<% } -%>
+<% if $search == false { -%>
+rm search
+<% } -%>
+<% else { -%>
+<%   unless empty($search) { -%>
+rm search/domain[.!="<%= $search.join('" and .!="') %>"]
+<%    $search.each |$search_domain| { -%>
+set search/domain[.="<%= $search_domain %>"] <%= $search_domain %>
+<%    } -%>
+<%   } -%>
+<% } -%>
+<% if $sortlist == false { -%>
+rm sortlist
+<%  } -%>
+<% else { -%>
+<%   unless empty($sortlist) { -%>
+<%    $sortlist.each |$item| { -%>
+<%      if '/' in $item { -%>
+<%        $item_parts = $item.split('/') -%>
+set sortlist/ipaddr[.="<%= $item_parts[0] %>"] <%= $item_parts[0] %>
+set sortlist/ipaddr["<%= $item_parts[0] %>"]/netmask <%= $item_parts[1] %>
+<%      } -%>
+<%      else { -%>
+set sortlist/ipaddr["<%= $item %>"] <%= $item %>
+<%      } -%>
+<%    } -%>
+<%    $_clean_sortlist = $sortlist.map |$item| { $item.split('/')[0] } -%>
+rm sortlist/ipaddr[.!="<%= $_clean_sortlist.join('" and .!="') %>"]
+<%   } -%>
+<% } -%>
+<%
+filter($options) |$opt| {
+  stdlib::start_with($opt, '--')
+}.each |$opt| {
+-%>
+rm options/<%= split($opt, ':')[0][2,-1] %>
+<% } -%>
+<% unless empty($options) { -%>
+defnode opts options ""
+<% } -%>
+<% $options.each |$opt| { -%>
+<% if stdlib::start_with($opt, '--') { next () } -%>
+<%  if ':' in $opt { -%>
+<%    $opt_parts = $opt.split(':') -%>
+set $opts/<%= $opt_parts[0] %> <%= $opt_parts[1] %>
+<%  } -%>
+<%  else { -%>
+set $opts/<%= $opt %> ""
+<%  } -%>
+<% } -%>
+rm options[count(*)=0]
