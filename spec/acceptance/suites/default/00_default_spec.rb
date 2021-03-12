@@ -274,6 +274,19 @@ describe 'resolv' do
           expect(file_content_on(host, '/etc/resolv.conf').strip).to eq(expected_content.strip)
         end
       end
+
+      context 'when number of servers is less than the minimum number of servers' do
+        let(:manifest) do
+          <<~EOF
+            class { 'resolv':
+              servers   => ['8.8.8.8'],
+              min_num_servers => 2,
+            }
+          EOF
+        end
+
+        it { is_expected.to compile.and_raise_error(/The number of dns servers configured: 1 is less than the minimum number of servers configured: 2/) }
+      end
     end
   end
 end

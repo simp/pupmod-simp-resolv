@@ -15,6 +15,12 @@
 #
 #   * Set to `false` to actively remove this option from the configuration
 #
+# @param min_num_servers
+#   An integer between 0 and 3 that represents the minimum number of dns
+#   servers that must be configured. This number will be checked against
+#   the length of the servers parameter. Puppet will fail and throw an
+#   error if the minimum number of servers is not configured.
+#
 # @param search
 #   Array of entries that will be searched, in order, for hosts.
 #
@@ -118,6 +124,7 @@
 class resolv (
   Enum['present', 'absent']                                 $ensure                    = 'present',
   Optional[Variant[Boolean[false], Array[Simplib::IP,0,3]]] $servers                   = simplib::lookup('simp_options::dns::servers', 'default_value' => undef ),
+  Optional[Integer[0,3]]                                    $min_num_servers           = 0,
   Optional[Variant[Boolean[false], Array[Simplib::Domain]]] $search                    = simplib::lookup('simp_options::dns::search', 'default_value' => undef ),
   Optional[Variant[Boolean[false], Resolv::Domain]]         $resolv_domain             = undef,
   Boolean                                                   $debug                     = false,
@@ -139,6 +146,10 @@ class resolv (
   Optional[Variant[Array[String[1]], String[1]]]            $content                   = undef,
   Boolean                                                   $ignore_dhcp_dns           = true
 ) {
+
+  if $servers.length <= $min_num_servers {
+    fail("The number of dns servers configured: ${servers.length} is less than the minimum number of servers configured: ${min_num_servers}")
+  }
 
   if $ensure == 'absent' {
     file { '/etc/resolv.conf': ensure => 'absent' }
