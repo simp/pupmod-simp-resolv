@@ -147,7 +147,7 @@ class resolv (
   Boolean                                                   $ignore_dhcp_dns           = true
 ) {
 
-  if $servers.length <= $min_num_servers {
+  if $servers != undef and (length($servers) <= $min_num_servers) {
     fail("The number of dns servers configured: ${servers.length} is less than the minimum number of servers configured: ${min_num_servers}")
   }
 

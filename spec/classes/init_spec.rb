@@ -344,6 +344,26 @@ describe 'resolv' do
 
           it { expect { is_expected.to compile.with_all_deps}.to raise_error(/not be your only/) }
         end
+
+        context 'when number of servers is less than the minimum number of servers' do
+          let(:facts) do
+            os_facts.merge({
+              :fqdn             => 'foo.bar.baz',
+              :hostname         => 'foo',
+              :interfaces       => 'eth0',
+              :ipaddress_eth0   => '10.0.2.15',
+              :selinux_enforced => true,
+            })
+          end
+
+          let(:params) do { 
+            :servers => ['1.2.3.4'],
+            :min_num_servers => 2 
+          }
+          end
+  
+          it { is_expected.to compile.and_raise_error(/The number of dns servers configured: 1 is less than the minimum number of servers configured: 2/) }
+        end
       end
     end
   end
