@@ -4,14 +4,14 @@ fixtures:
     augeas_core:
       repo: https://github.com/simp/pupmod-puppetlabs-augeas_core.git
       puppet_version: ">= 6.0.0"
-    compliance_markup: https://github.com/simp/pupmod-simp-compliance_markup
+    compliance_markup: https://github.com/simp/pupmod-simp-compliance_markup.git
     named: https://github.com/simp/pupmod-simp-named.git
     rsync: https://github.com/simp/pupmod-simp-rsync.git
     selinux_core:
-      repo: "https://github.com/simp/pupmod-puppetlabs-selinux_core"
+      repo: https://github.com/simp/pupmod-puppetlabs-selinux_core.git
       puppet_version: ">= 6.0.0"
     stdlib: https://github.com/simp/puppetlabs-stdlib.git
-    simp_options: https://github.com/simp/pupmod-simp-simp_options
+    simp_options: https://github.com/simp/pupmod-simp-simp_options.git
     simplib: https://github.com/simp/pupmod-simp-simplib.git
     concat: https://github.com/simp/puppetlabs-concat.git
   symlinks:
