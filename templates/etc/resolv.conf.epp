@@ -13,8 +13,8 @@ rm nameserver
 <% else { -%>
 <%   unless empty($nameservers) { -%>
 rm nameserver[.!="<%= $nameservers.join('" and .!="') %>"]
-<%     $nameservers.each |$nameserver| { -%>
-set nameserver[.="<%= $nameserver %>"] <%= $nameserver %>
+<%     $nameservers.each |$i, $nameserver| { -%>
+set nameserver[<%= $i + 1 %>] <%= $nameserver %>
 <%     } -%>
 <%   } -%>
 <% } -%>
