@@ -90,8 +90,8 @@ describe 'resolv' do
             <<~EXPECTED
             rm #comment
             rm nameserver[.!="1.2.3.4" and .!="5.6.7.8"]
-            set nameserver[.="1.2.3.4"] 1.2.3.4
-            set nameserver[.="5.6.7.8"] 5.6.7.8
+            set nameserver[1] 1.2.3.4
+            set nameserver[2] 5.6.7.8
             rm search/domain[.!="example.com"]
             set search/domain[.="example.com"] example.com
             rm options/debug
@@ -136,8 +136,8 @@ describe 'resolv' do
             <<~EXPECTED
             rm #comment
             rm nameserver[.!="1.2.3.4" and .!="5.6.7.8"]
-            set nameserver[.="1.2.3.4"] 1.2.3.4
-            set nameserver[.="5.6.7.8"] 5.6.7.8
+            set nameserver[1] 1.2.3.4
+            set nameserver[2] 5.6.7.8
             rm search/domain[.!="foo.bar" and .!="test.net"]
             set search/domain[.="foo.bar"] foo.bar
             set search/domain[.="test.net"] test.net
