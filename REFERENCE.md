@@ -7,16 +7,16 @@
 ### Classes
 
 * [`resolv`](#resolv): Configures /etc/resolv.conf or the NetworkManager equivalent
-* [`resolv::host_conf`](#resolvhost_conf): Configures /etc/host.conf
+* [`resolv::host_conf`](#resolv--host_conf): Configures /etc/host.conf
 
 ### Data types
 
-* [`Resolv::Domain`](#resolvdomain): Valid values for the resolv.conf "domain" option
-* [`Resolv::Sortlist`](#resolvsortlist): Valid resolv.conf `sortlist` field
+* [`Resolv::Domain`](#Resolv--Domain): Valid values for the resolv.conf "domain" option
+* [`Resolv::Sortlist`](#Resolv--Sortlist): Valid resolv.conf `sortlist` field
 
 ## Classes
 
-### `resolv`
+### <a name="resolv"></a>`resolv`
 
 Configures /etc/resolv.conf or the NetworkManager equivalent
 
@@ -25,9 +25,32 @@ Configures /etc/resolv.conf or the NetworkManager equivalent
 
 #### Parameters
 
-The following parameters are available in the `resolv` class.
+The following parameters are available in the `resolv` class:
 
-##### `ensure`
+* [`ensure`](#-resolv--ensure)
+* [`servers`](#-resolv--servers)
+* [`search`](#-resolv--search)
+* [`resolv_domain`](#-resolv--resolv_domain)
+* [`debug`](#-resolv--debug)
+* [`rotate`](#-resolv--rotate)
+* [`no_check_names`](#-resolv--no_check_names)
+* [`inet6`](#-resolv--inet6)
+* [`ndots`](#-resolv--ndots)
+* [`timeout`](#-resolv--timeout)
+* [`attempts`](#-resolv--attempts)
+* [`named_server`](#-resolv--named_server)
+* [`named_autoconf`](#-resolv--named_autoconf)
+* [`caching`](#-resolv--caching)
+* [`use_nmcli`](#-resolv--use_nmcli)
+* [`nmcli_connection_name`](#-resolv--nmcli_connection_name)
+* [`nmcli_ignore_auto_dns`](#-resolv--nmcli_ignore_auto_dns)
+* [`nmcli_auto_reapply_device`](#-resolv--nmcli_auto_reapply_device)
+* [`sortlist`](#-resolv--sortlist)
+* [`extra_options`](#-resolv--extra_options)
+* [`content`](#-resolv--content)
+* [`ignore_dhcp_dns`](#-resolv--ignore_dhcp_dns)
+
+##### <a name="-resolv--ensure"></a>`ensure`
 
 Data type: `Enum['present', 'absent']`
 
@@ -37,7 +60,7 @@ Remove the resolv.conf from the system if set to `absent`
 
 Default value: `'present'`
 
-##### `servers`
+##### <a name="-resolv--servers"></a>`servers`
 
 Data type: `Optional[Variant[Boolean[false], Array[Simplib::IP,0,3]]]`
 
@@ -50,7 +73,7 @@ nameservers
 
 Default value: `simplib::lookup('simp_options::dns::servers', 'default_value' => undef )`
 
-##### `search`
+##### <a name="-resolv--search"></a>`search`
 
 Data type: `Optional[Variant[Boolean[false], Array[Simplib::Domain]]]`
 
@@ -60,7 +83,7 @@ Array of entries that will be searched, in order, for hosts.
 
 Default value: `simplib::lookup('simp_options::dns::search', 'default_value' => undef )`
 
-##### `resolv_domain`
+##### <a name="-resolv--resolv_domain"></a>`resolv_domain`
 
 Data type: `Optional[Variant[Boolean[false], Resolv::Domain]]`
 
@@ -70,26 +93,26 @@ Local domain name, defaults to the domain of your host.
 
 * Set to `false` to actively remove this option from the configuration
 
-Default value: ``undef``
+Default value: `undef`
 
-##### `debug`
+##### <a name="-resolv--debug"></a>`debug`
 
 Data type: `Boolean`
 
 Print debugging messages
 
-Default value: ``false``
+Default value: `false`
 
-##### `rotate`
+##### <a name="-resolv--rotate"></a>`rotate`
 
 Data type: `Boolean`
 
 When `true`, enables round-robin selection of $servers to distribute the
 query load.
 
-Default value: ``true``
+Default value: `true`
 
-##### `no_check_names`
+##### <a name="-resolv--no_check_names"></a>`no_check_names`
 
 Data type: `Boolean`
 
@@ -97,17 +120,17 @@ When `true`, disables the modern BIND checking of incoming hostnames and
 mail names for invalid characters such as underscore (`_`), non-ASCII, or
 control characters.
 
-Default value: ``false``
+Default value: `false`
 
-##### `inet6`
+##### <a name="-resolv--inet6"></a>`inet6`
 
 Data type: `Boolean`
 
 When `true`, use AAAA (IPv6) queries and convert A (IPv4) results
 
-Default value: ``false``
+Default value: `false`
 
-##### `ndots`
+##### <a name="-resolv--ndots"></a>`ndots`
 
 Data type: `Variant[Boolean[false], Integer[0,15]]`
 
@@ -117,7 +140,7 @@ Value for the `ndots:` option in resolv.conf
 
 Default value: `1`
 
-##### `timeout`
+##### <a name="-resolv--timeout"></a>`timeout`
 
 Data type: `Variant[Boolean[false], Integer[0,30]]`
 
@@ -127,7 +150,7 @@ Amount of time (in seconds) the resolver will wait for a response
 
 Default value: `2`
 
-##### `attempts`
+##### <a name="-resolv--attempts"></a>`attempts`
 
 Data type: `Variant[Boolean[false], Integer[0,5]]`
 
@@ -137,16 +160,16 @@ Number of times to attempt querying $servers before giving up
 
 Default value: `2`
 
-##### `named_server`
+##### <a name="-resolv--named_server"></a>`named_server`
 
 Data type: `Boolean`
 
 A boolean that states that this server is definitively a named server.
 Bypasses the need for $named_autoconf below.
 
-Default value: ``false``
+Default value: `false`
 
-##### `named_autoconf`
+##### <a name="-resolv--named_autoconf"></a>`named_autoconf`
 
 Data type: `Boolean`
 
@@ -155,9 +178,9 @@ true           => If the server where puppet is being run is in the list of
         $servers then automatically configure named.
 false          => Do not autoconfigure named.
 
-Default value: ``true``
+Default value: `true`
 
-##### `caching`
+##### <a name="-resolv--caching"></a>`caching`
 
 Data type: `Boolean`
 
@@ -165,9 +188,9 @@ Data type: `Boolean`
 the system will set itself up as a caching nameserver unless this is set
 to false.
 
-Default value: ``true``
+Default value: `true`
 
-##### `use_nmcli`
+##### <a name="-resolv--use_nmcli"></a>`use_nmcli`
 
 Data type: `Boolean`
 
@@ -176,31 +199,31 @@ modifying resolv.conf
 
 Default value: `pick($facts.dig('simplib__networkmanager', 'enabled'), false)`
 
-##### `nmcli_connection_name`
+##### <a name="-resolv--nmcli_connection_name"></a>`nmcli_connection_name`
 
 Data type: `Optional[String[1]]`
 
 **DEPRECATED** => Remains for API until next release
 
-Default value: ``undef``
+Default value: `undef`
 
-##### `nmcli_ignore_auto_dns`
-
-Data type: `Optional[Boolean]`
-
-**DEPRECATED** => Remains for API until next release
-
-Default value: ``undef``
-
-##### `nmcli_auto_reapply_device`
+##### <a name="-resolv--nmcli_ignore_auto_dns"></a>`nmcli_ignore_auto_dns`
 
 Data type: `Optional[Boolean]`
 
 **DEPRECATED** => Remains for API until next release
 
-Default value: ``undef``
+Default value: `undef`
 
-##### `sortlist`
+##### <a name="-resolv--nmcli_auto_reapply_device"></a>`nmcli_auto_reapply_device`
+
+Data type: `Optional[Boolean]`
+
+**DEPRECATED** => Remains for API until next release
+
+Default value: `undef`
+
+##### <a name="-resolv--sortlist"></a>`sortlist`
 
 Data type: `Optional[Variant[Boolean[false], Resolv::Sortlist]]`
 
@@ -209,9 +232,9 @@ gethostbyname to be sorted.
 
 * Set to `false` to actively remove this option from the configuration
 
-Default value: ``undef``
+Default value: `undef`
 
-##### `extra_options`
+##### <a name="-resolv--extra_options"></a>`extra_options`
 
 Data type: `Optional[Array[String[1]]]`
 
@@ -231,26 +254,26 @@ below. These will be appended to the options string.
     # Ensure that ip6-dotint is not set
     - '--ip6-dotint'
 
-Default value: ``undef``
+Default value: `undef`
 
-##### `content`
+##### <a name="-resolv--content"></a>`content`
 
 Data type: `Optional[Variant[Array[String[1]], String[1]]]`
 
 Unless in NMCLI mode, ignores all other options and writes the specified
 content to `/etc/resolv.conf`
 
-Default value: ``undef``
+Default value: `undef`
 
-##### `ignore_dhcp_dns`
+##### <a name="-resolv--ignore_dhcp_dns"></a>`ignore_dhcp_dns`
 
 Data type: `Boolean`
 
 Ignores entries passed down from DHCP
 
-Default value: ``true``
+Default value: `true`
 
-### `resolv::host_conf`
+### <a name="resolv--host_conf"></a>`resolv::host_conf`
 
 Configures /etc/host.conf
 
@@ -259,33 +282,38 @@ Configures /etc/host.conf
 
 #### Parameters
 
-The following parameters are available in the `resolv::host_conf` class.
+The following parameters are available in the `resolv::host_conf` class:
 
-##### `trim`
+* [`trim`](#-resolv--host_conf--trim)
+* [`multi`](#-resolv--host_conf--multi)
+* [`reorder`](#-resolv--host_conf--reorder)
+* [`spoof`](#-resolv--host_conf--spoof)
+
+##### <a name="-resolv--host_conf--trim"></a>`trim`
 
 Data type: `Optional[Array[Pattern[/^\./]]]`
 
 
 
-Default value: ``undef``
+Default value: `undef`
 
-##### `multi`
-
-Data type: `Boolean`
-
-
-
-Default value: ``true``
-
-##### `reorder`
+##### <a name="-resolv--host_conf--multi"></a>`multi`
 
 Data type: `Boolean`
 
 
 
-Default value: ``true``
+Default value: `true`
 
-##### `spoof`
+##### <a name="-resolv--host_conf--reorder"></a>`reorder`
+
+Data type: `Boolean`
+
+
+
+Default value: `true`
+
+##### <a name="-resolv--host_conf--spoof"></a>`spoof`
 
 Data type: `Optional[String]`
 
@@ -293,17 +321,17 @@ defunct, see: https://bugzilla.redhat.com/show_bug.cgi?id=1577265)
 
 Remains to prevent issues with direct ``class`` calls.
 
-Default value: ``undef``
+Default value: `undef`
 
 ## Data types
 
-### `Resolv::Domain`
+### <a name="Resolv--Domain"></a>`Resolv::Domain`
 
 Valid values for the resolv.conf "domain" option
 
 Alias of `Variant[Simplib::Domain, Enum['.']]`
 
-### `Resolv::Sortlist`
+### <a name="Resolv--Sortlist"></a>`Resolv::Sortlist`
 
 Valid resolv.conf `sortlist` field
 
