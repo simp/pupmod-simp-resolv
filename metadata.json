@@ -1,6 +1,6 @@
 {
   "name": "simp-resolv",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "author": "SIMP Team",
   "summary": "A SIMP Puppet module for managing client-side DNS settings",
   "license": "Apache-2.0",
@@ -50,6 +50,12 @@
     },
     {
       "operatingsystem": "Rocky",
+      "operatingsystemrelease": [
+        "8"
+      ]
+    },
+    {
+      "operatingsystem": "AlmaLinux",
       "operatingsystemrelease": [
         "8"
       ]
