@@ -11,9 +11,9 @@ describe 'resolv::host_conf' do
         context 'with default parameters' do
           it { is_expected.to compile.with_all_deps }
           it {
-            is_expected.to create_file('/etc/host.conf').with_content(<<-EOM.gsub(%r{^\s+}, ''))
-            multi on
-            reorder on
+            is_expected.to create_file('/etc/host.conf').with_content(<<~EOM)
+              multi on
+              reorder on
             EOM
           }
         end
@@ -22,10 +22,10 @@ describe 'resolv::host_conf' do
           let(:params) { { trim: ['.bar.baz', '.alpha.beta'] } }
 
           it {
-            is_expected.to create_file('/etc/host.conf').with_content(<<-EOM.gsub(%r{^\s+}, ''))
-             multi on
-             reorder on
-             trim .bar.baz,.alpha.beta
+            is_expected.to create_file('/etc/host.conf').with_content(<<~EOM)
+              multi on
+              reorder on
+              trim .bar.baz,.alpha.beta
              EOM
           }
         end
