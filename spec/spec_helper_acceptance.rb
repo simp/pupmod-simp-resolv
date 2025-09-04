@@ -15,7 +15,6 @@ unless ENV['BEAKER_provision'] == 'no'
   end
 end
 
-
 RSpec.configure do |c|
   # ensure that environment OS is ready on each host
   fix_errata_on hosts
@@ -29,15 +28,11 @@ RSpec.configure do |c|
 
   # Configure all nodes in nodeset
   c.before :suite do
-    begin
-      # Install modules and dependencies from spec/fixtures/modules
-      copy_fixture_modules_to( hosts )
-    rescue StandardError, ScriptError => e
-      if ENV['PRY']
-        require 'pry'; binding.pry
-      else
-        raise e
-      end
-    end
+    # Install modules and dependencies from spec/fixtures/modules
+    copy_fixture_modules_to(hosts)
+  rescue StandardError, ScriptError => e
+    raise e unless ENV['PRY']
+    require 'pry'
+    binding.pry # rubocop:disable Lint/Debugger
   end
 end

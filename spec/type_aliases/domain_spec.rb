@@ -9,11 +9,11 @@ describe 'Resolv::Domain' do
   end
 
   context 'with silly things' do
-    it { is_expected.not_to allow_value("test-.com") }
-    it { is_expected.not_to allow_value("test.0") }
+    it { is_expected.not_to allow_value('test-.com') }
+    it { is_expected.not_to allow_value('test.0') }
     it { is_expected.not_to allow_value([]) }
-    it { is_expected.not_to allow_value('' ) }
-    it { is_expected.not_to allow_value("test.c m") }
+    it { is_expected.not_to allow_value('') }
+    it { is_expected.not_to allow_value('test.c m') }
     it { is_expected.not_to allow_value("test.com\n") }
     it { is_expected.not_to allow_value(:undef) }
   end

@@ -10,9 +10,9 @@ describe 'resolv' do
       # This is in place for EL8 and is due to single-request-reopen being
       # spammed into set by /etc/NetworkManager/dispatcher.d/fix-slow-dns which
       # appears to be a bug in the CentOS Vagrant image.
-      it 'should remove the fix-slow-dns script' do
+      it 'removes the fix-slow-dns script' do
         on(host, 'puppet resource file /etc/NetworkManager/dispatcher.d/fix-slow-dns ensure=absent')
-        on(host, %{sed -i '/options/d' /etc/resolv.conf})
+        on(host, %(sed -i '/options/d' /etc/resolv.conf))
       end
     end
   end
@@ -24,26 +24,26 @@ describe 'resolv' do
           class { 'resolv':
             servers   => #{servers.reverse},
             search    => ['simp.beaker', 'foo.bar', 'bar.baz'],
-            use_nmcli => false
+            use_nmcli => false,
           }
         EOF
       end
 
-      it 'should apply with no errors' do
+      it 'applies with no errors' do
         apply_manifest_on(host, manifest)
       end
 
-      it 'should be idempotent' do
+      it 'is idempotent' do
         apply_manifest_on(host, manifest, catch_changes: true)
       end
 
-      it 'should have a properly filled /etc/resolv.conf' do
+      it 'has a properly filled /etc/resolv.conf' do
         expected_content = <<~EXPECTED
-        search simp.beaker foo.bar bar.baz
-        nameserver 1.1.1.1
-        nameserver 8.8.4.4
-        nameserver 8.8.8.8
-        options attempts:2 ndots:1 rotate timeout:2
+          search simp.beaker foo.bar bar.baz
+          nameserver 1.1.1.1
+          nameserver 8.8.4.4
+          nameserver 8.8.8.8
+          options attempts:2 ndots:1 rotate timeout:2
         EXPECTED
 
         expect(file_content_on(host, '/etc/resolv.conf').strip).to eq(expected_content.strip)
@@ -65,20 +65,20 @@ describe 'resolv' do
         EOF
       end
 
-      it 'should apply with no errors' do
+      it 'applies with no errors' do
         apply_manifest_on(host, manifest)
       end
 
-      it 'should be idempotent' do
+      it 'is idempotent' do
         apply_manifest_on(host, manifest, catch_changes: true)
       end
 
-      it 'should have a properly filled /etc/resolv.conf' do
+      it 'has a properly filled /etc/resolv.conf' do
         expected_content = <<~EXPECTED
-        search simp.beaker foo.bar bar.baz
-        nameserver 8.8.8.8
-        nameserver 8.8.4.4
-        nameserver 1.1.1.1
+          search simp.beaker foo.bar bar.baz
+          nameserver 8.8.8.8
+          nameserver 8.8.4.4
+          nameserver 1.1.1.1
         EXPECTED
 
         expect(file_content_on(host, '/etc/resolv.conf').strip).to eq(expected_content.strip)
@@ -95,27 +95,27 @@ describe 'resolv' do
             debug          => true,
             no_check_names => true,
             sortlist       => ['1.2.3.0/255.255.255.0', '2.3.0.0/255.255.0.0'],
-            extra_options  => ['edns0']
+            extra_options  => ['edns0'],
           }
         EOF
       end
 
-      it 'should apply with no errors' do
+      it 'applies with no errors' do
         apply_manifest_on(host, manifest)
       end
 
-      it 'should be idempotent' do
+      it 'is idempotent' do
         apply_manifest_on(host, manifest, catch_changes: true)
       end
 
-      it 'should have a properly filled /etc/resolv.conf' do
+      it 'has a properly filled /etc/resolv.conf' do
         expected_content = <<~EXPECTED
-        search simp.beaker foo.bar bar.baz
-        nameserver 8.8.8.8
-        nameserver 8.8.4.4
-        nameserver 1.1.1.1
-        sortlist 1.2.3.0/255.255.255.0 2.3.0.0/255.255.0.0
-        options attempts:2 debug edns0 ndots:1 no-check-names rotate timeout:2
+          search simp.beaker foo.bar bar.baz
+          nameserver 8.8.8.8
+          nameserver 8.8.4.4
+          nameserver 1.1.1.1
+          sortlist 1.2.3.0/255.255.255.0 2.3.0.0/255.255.0.0
+          options attempts:2 debug edns0 ndots:1 no-check-names rotate timeout:2
         EXPECTED
 
         expect(file_content_on(host, '/etc/resolv.conf').strip).to eq(expected_content.strip)
@@ -133,23 +133,23 @@ describe 'resolv' do
             no_check_names => true,
             sortlist       => ['3.4.5.0/255.255.255.0', '2.3.0.0/255.255.0.0'],
             extra_options  => ['edns0'],
-            content        => "nameserver 8.8.8.8  \n   nameserver 1.1.1.1"
+            content        => "nameserver 8.8.8.8  \n   nameserver 1.1.1.1",
           }
         EOF
       end
 
-      it 'should apply with no errors' do
+      it 'applies with no errors' do
         apply_manifest_on(host, manifest)
       end
 
-      it 'should be idempotent' do
+      it 'is idempotent' do
         apply_manifest_on(host, manifest, catch_changes: true)
       end
 
-      it 'should have a properly filled /etc/resolv.conf' do
+      it 'has a properly filled /etc/resolv.conf' do
         expected_content = <<~EXPECTED
-        nameserver 8.8.8.8
-        nameserver 1.1.1.1
+          nameserver 8.8.8.8
+          nameserver 1.1.1.1
         EXPECTED
 
         expect(file_content_on(host, '/etc/resolv.conf').strip).to eq(expected_content.strip)
@@ -181,7 +181,7 @@ describe 'resolv' do
         EOF
       end
 
-      it 'should apply with no errors' do
+      it 'applies with no errors' do
         apply_manifest_on(host, manifest)
       end
     end
@@ -206,7 +206,7 @@ describe 'resolv' do
         EOF
       end
 
-      it 'should apply with no errors' do
+      it 'applies with no errors' do
         apply_manifest_on(host, manifest)
       end
     end
@@ -216,27 +216,27 @@ describe 'resolv' do
         let(:manifest) do
           <<~EOF
             class { 'resolv':
-              servers => #{servers.reverse}
+              servers => #{servers.reverse},
             }
           EOF
         end
 
-        it 'should apply with no errors' do
+        it 'applies with no errors' do
           apply_manifest_on(host, manifest)
         end
 
-        it 'should be idempotent' do
+        it 'is idempotent' do
           apply_manifest_on(host, manifest, catch_changes: true)
         end
 
-        it 'should have a properly filled /etc/resolv.conf' do
+        it 'has a properly filled /etc/resolv.conf' do
           expected_content = <<~EXPECTED
-          # Generated by NetworkManager
-          search simp.beaker
-          nameserver 1.1.1.1
-          nameserver 8.8.4.4
-          nameserver 8.8.8.8
-          options attempts:2 ndots:1 rotate timeout:2
+            # Generated by NetworkManager
+            search simp.beaker
+            nameserver 1.1.1.1
+            nameserver 8.8.4.4
+            nameserver 8.8.8.8
+            options attempts:2 ndots:1 rotate timeout:2
           EXPECTED
 
           expect(file_content_on(host, '/etc/resolv.conf').strip).to eq(expected_content.strip)
@@ -249,26 +249,26 @@ describe 'resolv' do
             class { 'resolv':
               servers   => #{servers},
               use_nmcli => false,
-              rotate    => false
+              rotate    => false,
             }
           EOF
         end
 
-        it 'should apply with no errors' do
+        it 'applies with no errors' do
           apply_manifest_on(host, manifest)
         end
 
-        it 'should be idempotent' do
+        it 'is idempotent' do
           apply_manifest_on(host, manifest, catch_changes: true)
         end
 
-        it 'should have a properly filled /etc/resolv.conf' do
+        it 'has a properly filled /etc/resolv.conf' do
           expected_content = <<~EXPECTED
-          search simp.beaker
-          nameserver 8.8.8.8
-          nameserver 8.8.4.4
-          nameserver 1.1.1.1
-          options attempts:2 ndots:1 timeout:2
+            search simp.beaker
+            nameserver 8.8.8.8
+            nameserver 8.8.4.4
+            nameserver 1.1.1.1
+            options attempts:2 ndots:1 timeout:2
           EXPECTED
 
           expect(file_content_on(host, '/etc/resolv.conf').strip).to eq(expected_content.strip)
