@@ -1,6 +1,6 @@
 {
   "name": "simp-resolv",
-  "version": "0.11.0",
+  "version": "1.0.0",
   "author": "SIMP Team",
   "summary": "A SIMP Puppet module for managing client-side DNS settings",
   "license": "Apache-2.0",
