@@ -3,7 +3,7 @@ require 'spec_helper_acceptance'
 test_name 'resolv'
 
 describe 'resolv' do
-  servers = ['8.8.8.8', '8.8.4.4', '1.1.1.1']
+  let(:servers) { ['8.8.8.8', '8.8.4.4', '1.1.1.1'] }
 
   hosts.each do |host|
     context "prep #{host}" do
