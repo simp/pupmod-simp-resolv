@@ -9,5 +9,3 @@ fixtures:
     simp_options: https://github.com/simp/pupmod-simp-simp_options.git
     simplib: https://github.com/simp/pupmod-simp-simplib.git
     concat: https://github.com/simp/puppetlabs-concat.git
-  symlinks:
-    resolv: "#{source_dir}"
