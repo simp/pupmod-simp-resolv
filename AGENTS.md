@@ -13,19 +13,19 @@ off to `nmcli`. It can also opt the host out of DHCP-provided DNS
 nameserver or a caching resolver, auto-configure the `named` module. A second
 class, `resolv::host_conf`, manages `/etc/host.conf`.
 
-The module has two modes for the same job (`manifests/init.pp:173-229`):
+The module has two modes for the same job (`manifests/init.pp`):
 
 - **NetworkManager mode** (`$use_nmcli`, defaults to the
   `simplib__networkmanager.enabled` fact): DNS is rendered into
   `/etc/NetworkManager/conf.d/zz_10_simp_dns.conf` from the
   `resolv/etc/NetworkManager/conf.epp` template, and a HUP is sent to
   NetworkManager. In this mode NetworkManager is authoritative, so `--`
-  "remove this option" entries are filtered out (`init.pp:178`).
+  "remove this option" entries are filtered out (`init.pp`).
 - **Direct mode** (`present`, non-NetworkManager): `/etc/resolv.conf` is
   written and then edited in place with `augeas` using the module's own
   `resolv` lens (`lib/augeas/lenses/resolv.aug`), unless `$content` is supplied
   (in which case the raw content is written and augeas is skipped)
-  (`init.pp:181-212`).
+  (`init.pp`).
 
 ### Business logic
 
@@ -33,62 +33,62 @@ Two public classes; no defines. Neither class calls `assert_private()`, so
 both are public API (consumers `include 'resolv'` / `include
 'resolv::host_conf'`).
 
-- **`resolv` (`manifests/init.pp:118-276`)** — the entry class. All parameters
-  are typed (`init.pp:118-141`). Notable ones:
+- **`resolv` (`manifests/init.pp`)** — the entry class. All parameters
+  are typed (`init.pp`). Notable ones:
   - `$ensure` (`Enum['present','absent']`, default `'present'`) — when
     `'absent'`, the class does one thing: `file { '/etc/resolv.conf': ensure =>
-    'absent' }` and skips all other file management (`init.pp:143-145`). The
+    'absent' }` and skips all other file management (`init.pp`). The
     named/PEERDNS logic below the `if/else` still runs.
-  - `$servers` (`init.pp:120`) — defaults from the seam
+  - `$servers` (`init.pp`) — defaults from the seam
     `simplib::lookup('simp_options::dns::servers', 'default_value' => undef)`.
     Typed `Optional[Variant[Boolean[false], Array[Simplib::IP,0,3]]]` — at most
     **3** servers; `false` actively removes the option.
-  - `$search` (`init.pp:121`) — defaults from
+  - `$search` (`init.pp`) — defaults from
     `simplib::lookup('simp_options::dns::search', 'default_value' => undef)`.
-  - `$use_nmcli` (`init.pp:133`) — defaults to
+  - `$use_nmcli` (`init.pp`) — defaults to
     `pick($facts.dig('simplib__networkmanager', 'enabled'), false)`; this fact
     (from `simp/simplib`) is what selects NetworkManager vs. direct mode.
-  - `$content` (`init.pp:139`) — if set, its lines are stripped and joined and
+  - `$content` (`init.pp`) — if set, its lines are stripped and joined and
     written verbatim to `/etc/resolv.conf`; augeas is bypassed
-    (`init.pp:184-189,198`).
+    (`init.pp`).
   - `$ignore_dhcp_dns` (`Boolean`, default `true`) — drives `PEERDNS`.
 
   Control flow and resources:
-  - **Options assembly** (`init.pp:147-156`): `$_options` is built by mapping
+  - **Options assembly** (`init.pp`): `$_options` is built by mapping
     each toggle to either its option string or a `--`-prefixed removal token
     (`ndots`/`timeout`/`attempts` take a `false` => remove; `debug`/`rotate`/
     `no_check_names`/`inet6` take true/false/other), concatenated with
     `$extra_options`, then `sort(unique(...))`.
-  - **Search assembly** (`init.pp:158-171`): merges `$search` with the
+  - **Search assembly** (`init.pp`): merges `$search` with the
     (obsolete) `$resolv_domain` into `$_search`.
-  - **NetworkManager branch** (`init.pp:173-180`): renders
+  - **NetworkManager branch** (`init.pp`): renders
     `resolv/etc/NetworkManager/conf.epp`, filtering out `--` options.
-  - **Direct `present` branch** (`init.pp:181-213`): writes
+  - **Direct `present` branch** (`init.pp`): writes
     `/etc/resolv.conf` (mode `0644`) and, unless `$content`, renders
     `resolv/etc/resolv.conf.epp` into augeas `changes` against context
     `/files/etc/resolv.conf`, requiring the file.
-  - **NetworkManager file + reload** (`init.pp:215-229`): guarded by the
+  - **NetworkManager file + reload** (`init.pp`): guarded by the
     `simplib__networkmanager.enabled` fact (note: this is a *separate* check
     from `$use_nmcli`), writes the drop-in and notifies
     `exec { "${module_name}_restart_networkmanager" }` which runs
     `pkill -HUP NetworkManager` (`refreshonly`).
-  - **named autoconf** (`init.pp:232-261`): only when `$servers` is an
+  - **named autoconf** (`init.pp`): only when `$servers` is an
     `Array[Simplib::IP]`. Determines `$_is_named_server` from `$named_server`,
     an already-declared `Class['named']`, or (`$named_autoconf` and
     `simplib::host_is_me($servers)`). If not a named server, caching is on, and
     the **first** server is `127.0.0.1` or `::1`, it sets up a caching resolver
     via `include 'named::caching'` plus
     `named::caching::forwarders` for the remaining servers — but **`fail()`s if
-    `127.0.0.1` is the only entry** (`init.pp:245-247`). Otherwise, if it is a
+    `127.0.0.1` is the only entry** (`init.pp`). Otherwise, if it is a
     named server, `include 'named'`.
-  - **PEERDNS** (`init.pp:263-275`): `simp_file_line { 'resolv_peerdns' }`
+  - **PEERDNS** (`init.pp`): `simp_file_line { 'resolv_peerdns' }`
     (a `simp/simplib` type) sets `PEERDNS=no|yes` in
     `/etc/sysconfig/network` with `deconflict => true`.
 
-- **`resolv::host_conf` (`manifests/host_conf.pp:12-37`)** — public class
+- **`resolv::host_conf` (`manifests/host_conf.pp`)** — public class
   managing `/etc/host.conf` from `resolv/etc/host.conf.epp` with
   `$trim`/`$multi`/`$reorder`. `$spoof` is **defunct** (RH bug 1577265) and
-  only emits `simplib::deprecation` when set (`host_conf.pp:31-36`).
+  only emits `simplib::deprecation` when set (`host_conf.pp`).
 
 ### Gotchas / non-obvious details
 
@@ -96,29 +96,29 @@ both are public API (consumers `include 'resolv'` / `include
   versa — they are independent public classes managing different files.
 - **NetworkManager is selected two different ways.** `$use_nmcli` (which picks
   the render template) defaults to `simplib__networkmanager.enabled`, but the
-  *drop-in file + HUP* block (`init.pp:215`) checks the fact **directly**, not
+  *drop-in file + HUP* block (`init.pp`) checks the fact **directly**, not
   `$use_nmcli`. If a user overrides `$use_nmcli => false` on a NetworkManager
   host, `$_nmcli_config_content` is set by the `present` branch to
-  `"[main]\ndns=none\n"` (`init.pp:182`) and that is what gets written to the
+  `"[main]\ndns=none\n"` (`init.pp`) and that is what gets written to the
   drop-in — i.e. DNS-via-NM is disabled but the drop-in is still managed.
 - **At most 3 nameservers.** `$servers` is `Array[Simplib::IP,0,3]`
-  (`init.pp:120`) — resolv.conf historically honors only three.
+  (`init.pp`) — resolv.conf historically honors only three.
 - **Caching-resolver guard.** With `127.0.0.1`/`::1` first and caching on, you
   must supply at least one more upstream or catalog compilation `fail()`s
-  (`init.pp:245-247`).
-- **`$content` bypasses augeas entirely** (`init.pp:198`) — the structured
+  (`init.pp`).
+- **`$content` bypasses augeas entirely** (`init.pp`) — the structured
   options/search/sortlist rendering is skipped and the file is written
   verbatim.
 - **`--` option semantics differ by mode.** In direct mode a `--`-prefixed
   entry in `$extra_options` actively removes that option via the augeas lens;
   in NetworkManager mode `--` entries are filtered and ignored
-  (`init.pp:178`, template `resolv.conf.epp:54-60`).
+  (`init.pp`, template `resolv.conf.epp`).
 - **`$resolv_domain` and `resolv::host_conf::spoof` are deprecated/obsolete**
-  (`init.pp:23-28`, `host_conf.pp:8-11,31-36`) but retained for API stability.
+  (`init.pp`, `host_conf.pp`) but retained for API stability.
 - **`simp/simp_options` is NOT a declared dependency** in `metadata.json`, yet
   the manifest consumes the `simp_options::dns::*` seam via `simplib::lookup`
   (the lookup function is provided by `simp/simplib`). `simp_options` appears
-  only as a test fixture (`.fixtures.yml:9`).
+  only as a test fixture (`.fixtures.yml`).
 - **Ships a custom augeas lens** (`lib/augeas/lenses/resolv.aug`) — the direct
   mode depends on it being on the augeas load path.
 
@@ -127,10 +127,10 @@ both are public API (consumers `include 'resolv'` / `include
 This is the module's SIMP feature-toggle seam. Both calls are in
 `manifests/init.pp`:
 
-| Line | Key | `default_value` |
+| File | Key | `default_value` |
 |------|-----|-----------------|
-| `init.pp:120` | `simp_options::dns::servers` | `undef` |
-| `init.pp:121` | `simp_options::dns::search` | `undef` |
+| `init.pp` | `simp_options::dns::servers` | `undef` |
+| `init.pp` | `simp_options::dns::search` | `undef` |
 
 Keep routing SIMP feature toggles through
 `simplib::lookup('simp_options::*', 'default_value' => ...)` with an explicit
@@ -138,7 +138,7 @@ default rather than assuming `simp_options` is included.
 
 ## Dependencies
 
-Module dependencies (from `metadata.json:15-28`):
+Module dependencies (from `metadata.json`):
 
 - `simp/simplib` `>= 4.9.0 < 6.0.0` (provides `simplib::lookup`,
   `simplib::host_is_me`, `simplib::deprecation`, the `simp_file_line` type, the
@@ -182,7 +182,7 @@ OracleLinux 8/9/10; Rocky 8/9/10; AlmaLinux 8/9/10.
 - `REFERENCE.md` — generated Puppet Strings reference.
 - No `data/` / `hiera.yaml` — this module ships no in-module Hiera data.
 - **Acceptance runs in CI:** `.github/workflows/pr_tests.yml` has an
-  `acceptance` job (`pr_tests.yml:116-153`) alongside `puppet-syntax`,
+  `acceptance` job (`pr_tests.yml`) alongside `puppet-syntax`,
   `puppet-style`, `ruby-style`, `file-checks`, `releng-checks`, and
   `spec-tests`. Its matrix nodes are `docker_alma8/9/10`, `docker_centos9/10`,
   `docker_oel8/9/10`, `docker_rhel8/9/10`, and `docker_rocky8/9/10`. It starts
@@ -216,12 +216,12 @@ bundle exec rake beaker:suites[default]
 ```
 
 Relevant gem pins (from `Gemfile`): `puppetlabs_spec_helper ~> 8.0.0`
-(`Gemfile:30`), `simp-rake-helpers ~> 5.24.0` (`Gemfile:36`),
-`simp-rspec-puppet-facts ~> 4.0.0` (`Gemfile:38`), `simp-beaker-helpers
-~> 2.0.0` (`Gemfile:52`). Rubocop is pinned to `~> 1.88.0` (`Gemfile:16`). The
+(`Gemfile`), `simp-rake-helpers ~> 5.24.0` (`Gemfile`),
+`simp-rspec-puppet-facts ~> 4.0.0` (`Gemfile`), `simp-beaker-helpers
+~> 2.0.0` (`Gemfile`). Rubocop is pinned to `~> 1.88.0` (`Gemfile`). The
 test group installs both `openvox` and `puppet` gems, defaulting to the
-`>= 8 < 9` range (`Gemfile:23`). `spec/spec_helper.rb` uses
-`require 'puppetlabs_spec_helper/module_spec_helper'` (`spec_helper.rb:11`).
+`>= 8 < 9` range (`Gemfile`). `spec/spec_helper.rb` uses
+`require 'puppetlabs_spec_helper/module_spec_helper'` (`spec_helper.rb`).
 
 ## Conventions
 
