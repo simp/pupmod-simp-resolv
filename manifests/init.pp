@@ -139,7 +139,6 @@ class resolv (
   Optional[Variant[Array[String[1]], String[1]]]            $content                   = undef,
   Boolean                                                   $ignore_dhcp_dns           = true
 ) {
-
   if $ensure == 'absent' {
     file { '/etc/resolv.conf': ensure => 'absent' }
   }
@@ -176,7 +175,7 @@ class resolv (
           'nameservers' => pick($servers, []),
           'search'      => $_search,
           'options'     => $_options.filter |$opt| { !stdlib::start_with($opt, '--') }
-        })
+      })
     }
     elsif $ensure == 'present' {
       $_nmcli_config_content = "[main]\ndns=none\n"
