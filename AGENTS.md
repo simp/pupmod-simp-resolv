@@ -7,8 +7,7 @@ This file provides guidance to AI agents when working with code in this reposito
 `simp-resolv` is a SIMP Puppet module that manages **client-side DNS
 resolution** on Enterprise Linux systems. Its main class writes
 `/etc/resolv.conf` (via an `augeas` resource driven by a custom lens) or, on
-NetworkManager-managed hosts, writes a NetworkManager drop-in that hands DNS
-off to `nmcli`. It can also opt the host out of DHCP-provided DNS
+NetworkManager-managed hosts, writes a NetworkManager drop-in (`/etc/NetworkManager/conf.d/zz_10_simp_dns.conf`) and signals NetworkManager to reload (a `HUP`). It can also opt the host out of DHCP-provided DNS
 (`PEERDNS=no` in `/etc/sysconfig/network`) and, when the host is itself a
 nameserver or a caching resolver, auto-configure the `named` module. A second
 class, `resolv::host_conf`, manages `/etc/host.conf`.
