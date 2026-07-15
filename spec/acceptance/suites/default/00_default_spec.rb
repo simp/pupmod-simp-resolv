@@ -5,6 +5,30 @@ test_name 'resolv'
 describe 'resolv' do
   let(:servers) { ['8.8.8.8', '8.8.4.4', '1.1.1.1'] }
 
+  # On a fresh node the Sicura console previews this module with
+  # `puppet apply --noop`, which must not error. Exercise that here before the
+  # prep/apply contexts below. No package-removal step: resolv manages
+  # /etc/resolv.conf + network config only, so noop-only is the representative
+  # check. `servers` is required, so we noop the same manifest as the first
+  # real context (there is no bare-default manifest to reuse).
+  hosts.each do |host|
+    context 'in noop mode from a clean state' do
+      let(:noop_manifest) do
+        <<~EOF
+          class { 'resolv':
+            servers   => #{servers.reverse},
+            search    => ['simp.beaker', 'foo.bar', 'bar.baz'],
+            use_nmcli => false,
+          }
+        EOF
+      end
+
+      it 'applies without errors in noop mode' do
+        apply_manifest_on(host, noop_manifest, catch_failures: true, noop: true)
+      end
+    end
+  end
+
   hosts.each do |host|
     context "prep #{host}" do
       # Under Docker, /etc/resolv.conf is a bind mount injected by the
