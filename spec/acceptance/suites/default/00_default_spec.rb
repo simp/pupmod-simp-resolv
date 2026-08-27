@@ -42,6 +42,34 @@ describe 'resolv' do
     end
   end
 
+  # On a fresh node the Sicura console previews this module with
+  # `puppet apply --noop`, which must not error. Exercise that here, after the
+  # prep normalizations above (which touch /etc/sysconfig/network and detach
+  # the resolv.conf bind mount so a minimal container mirrors a real EL node)
+  # but before any real apply below. Running before prep fails on minimal
+  # EL9/EL10 containers: the module's Simp_file_line[resolv_peerdns] reads
+  # /etc/sysconfig/network even under --noop, and that file is absent until
+  # prep touches it. No package-removal step: resolv manages
+  # /etc/resolv.conf + network config only. `servers` is required, so we noop
+  # the same manifest as the first real context.
+  hosts.each do |host|
+    context 'in noop mode from a clean state' do
+      let(:noop_manifest) do
+        <<~EOF
+          class { 'resolv':
+            servers   => #{servers.reverse},
+            search    => ['simp.beaker', 'foo.bar', 'bar.baz'],
+            use_nmcli => false,
+          }
+        EOF
+      end
+
+      it 'applies without errors in noop mode' do
+        apply_manifest_on(host, noop_manifest, catch_failures: true, noop: true)
+      end
+    end
+  end
+
   hosts.each do |host|
     context "on #{host} with default options and not networkmanager" do
       let(:manifest) do
