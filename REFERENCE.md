@@ -336,4 +336,3 @@ Alias of `Variant[Simplib::Domain, Enum['.']]`
 Valid resolv.conf `sortlist` field
 
 Alias of `Array[Variant[Simplib::IP,Simplib::IP::V4::DDQ,Simplib::IP::V6], 0, 10]`
-
