@@ -50,19 +50,12 @@ describe 'resolv' do
   # EL9/EL10 containers: the module's Simp_file_line[resolv_peerdns] reads
   # /etc/sysconfig/network even under --noop, and that file is absent until
   # prep touches it. No package-removal step: resolv manages
-  # /etc/resolv.conf + network config only. `servers` is required, so we noop
-  # the same manifest as the first real context.
+  # /etc/resolv.conf + network config only. The console previews the class
+  # itself, so noop a bare include (every parameter, `servers` included, has a
+  # default).
   hosts.each do |host|
-    context 'in noop mode from a clean state' do
-      let(:noop_manifest) do
-        <<~EOF
-          class { 'resolv':
-            servers   => #{servers.reverse},
-            search    => ['simp.beaker', 'foo.bar', 'bar.baz'],
-            use_nmcli => false,
-          }
-        EOF
-      end
+    context "on #{host} in noop mode from a clean state" do
+      let(:noop_manifest) { "include 'resolv'" }
 
       it 'applies without errors in noop mode' do
         apply_manifest_on(host, noop_manifest, catch_failures: true, noop: true)
